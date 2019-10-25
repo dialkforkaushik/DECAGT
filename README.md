@@ -12,7 +12,9 @@ DECAGT provides a general, extendable software framework for discretizations of 
 # Credits #
 
 Authors (alphabetically sorted by last name):
+
 Pranav Jain
+
 Kaushik Kalyanaraman
 
 The concept and design of the software architecture is provided by Kaushik Kalyanaraman  with additional inputs from Pranav Jain. The development of code is due to Pranav Jain with inputs from Kaushik Kalyanaraman.
