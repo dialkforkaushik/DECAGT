@@ -64,7 +64,6 @@ int unsigned_volume(Vector2D &pts,
 }
 
 
-/* 
 int signed_volume(Vector2D &pts,
 				  double &vol) {
 

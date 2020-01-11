@@ -58,6 +58,7 @@ int SimplicialComplex::compute_boundary_matrices() {
 	boundary_matrices.reserve(n - 1);
 
 	SpMatI boundary_matrix;
+	SpMatIC boundary_matrix_col_major;
 	VectorTripletI triplet;
 
 	for (int i = 1; i < n; ++i) {
@@ -68,6 +69,8 @@ int SimplicialComplex::compute_boundary_matrices() {
 		int num_complex_lowdim = complex_lowdim.size();
 
 		boundary_matrix.resize(num_complex_lowdim,
+                               num_complex_highdim);
+		boundary_matrix_col_major.resize(num_complex_lowdim,
                                num_complex_highdim);
 
 		#pragma omp parallel for shared(triplet)
@@ -99,11 +102,15 @@ int SimplicialComplex::compute_boundary_matrices() {
 			}
 		}
 		boundary_matrix.setFromTriplets(triplet.begin(), triplet.end());
+		boundary_matrix_col_major.setFromTriplets(triplet.begin(), triplet.end());
 
 		boundary_matrix.makeCompressed();
 		boundary_matrices.push_back(boundary_matrix);
+		boundary_matrix_col_major.makeCompressed();
+		boundary_matrices_col_major.push_back(boundary_matrix_col_major);
 
 		boundary_matrix.resize(0, 0);
+		boundary_matrix_col_major.resize(0, 0);
 		triplet.clear();
 	}
 
@@ -123,51 +130,43 @@ int SimplicialComplex::compute_adjacency1d() {
 				simplex_map.clear();
 				adjacency1d[i][j].push_back(simplex_map);
 
-				// for (int k = 0; k < boundary_matrices[i].outerSize(); ++k) {
-					for (SpMatI::InnerIterator it(boundary_matrices[i],j); it; ++it) {
-						if (it.row() == j) {
-							simplex_map[it.col()] = j;
-						}
+				for (SpMatI::InnerIterator it(boundary_matrices[i],j); it; ++it) {
+					if (it.row() == j) {
+						simplex_map[it.col()] = j;
 					}
-				// }
+				}
+				
 				adjacency1d[i][j].push_back(simplex_map);
 				simplex_map.clear();
 			}
 			else if (i == complex_dimension) {
 				simplex_map.clear();
-				// for (int k = 0; k < boundary_matrices[i - 1].outerSize(); ++k) {
-					// for (SpMatI::InnerIterator it(boundary_matrices[i - 1],k); it; ++it) {
+
 				int N = simplex_simplices[j][complex_dimension - 1].size();
-						for (int k = 0; k < N; ++k)
-						// if (it.col() == j) {
-							simplex_map[simplex_simplices[j][complex_dimension - 1][k]] = j;
-						// }
-					// }
-				// }
+				for (int k = 0; k < N; ++k) {
+					simplex_map[simplex_simplices[j][complex_dimension - 1][k]] = j;
+				}
+
 				adjacency1d[i][j].push_back(simplex_map);
 				simplex_map.clear();
 				adjacency1d[i][j].push_back(simplex_map);
 			}
 			else {
-				Eigen::SparseVector<int> b = boundary_matrices[i-1].col(j);
 				simplex_map.clear();
-				for (int k = 0; k < b.outerSize(); ++k) {
-					for (Eigen::SparseVector<int>::InnerIterator it(b,k); it; ++it) {
-						// if (it.col() == j) {
-							simplex_map[it.row()] = j;
-						// }
+				for (SpMatIC::InnerIterator it(boundary_matrices_col_major[i-1],j); it; ++it) {
+					if (it.col() == j) {
+						simplex_map[it.row()] = j;
 					}
 				}
+
 				adjacency1d[i][j].push_back(simplex_map);
 				simplex_map.clear();
 
-				// for (int k = 0; k < boundary_matrices[i].outerSize(); ++k) {
-					for (SpMatI::InnerIterator it(boundary_matrices[i],j); it; ++it) {
-						if (it.row() == j) {
-							simplex_map[it.col()] = j;
-						}
+				for (SpMatI::InnerIterator it(boundary_matrices[i],j); it; ++it) {
+					if (it.row() == j) {
+						simplex_map[it.col()] = j;
 					}
-				// }
+				}
 				adjacency1d[i][j].push_back(simplex_map);
 			}
 		}

@@ -15,6 +15,7 @@ public:
     VectorI num_simplices;
     
     VectorSpmatI boundary_matrices;
+    VectorSpmatIC boundary_matrices_col_major;
     Vector3I simplices;
     MapVectorI elements;
     Vector3I simplex_simplices;
