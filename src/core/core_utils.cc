@@ -15,9 +15,6 @@
 
 
 
-/* \brief Compute factorial of a positive integer recursively
-
-*/
 int factorial(int &n) {
 	if (n == 0) {
 		n = 1;
@@ -35,10 +32,6 @@ int factorial(int &n) {
 }
 
 
-/* \brief Compute unsigned volume of a n-simplex.
-
-   The unsigned volume is always positive.
-*/
 int unsigned_volume(Vector2D &pts,
 					double &vol) {
 
@@ -165,12 +158,10 @@ int calculate_dual_volume(Vector2D &dual_volume,
 						VectorMap3I &adjacency1d,
 						VectorI &pts,
 						int dim,
-						int index,
-						int &init_index) {
+						int index) {
 
 	VectorD center;
 	double radius;
-	int num_simplices = simplices.size(); 
 
 	Vector2D vertex_pts;
 
@@ -182,25 +173,26 @@ int calculate_dual_volume(Vector2D &dual_volume,
 				vertex_pts);
 
 	temp_centers.push_back(center);
-	
-	if (num_simplices - 1 == dim) {
-		double vol;
-		unsigned_volume(temp_centers, vol);
-		dual_volume[num_simplices-temp_centers.size()][init_index] += vol;
 
+	double vol;
+	unsigned_volume(temp_centers, vol);
+
+	#pragma omp critical
+	dual_volume[dim][index] += vol;
+	
+	if (dim == 0) {
 		return SUCCESS;
 	}
 
-	for (auto it = adjacency1d[dim][index][1].begin(); it != adjacency1d[dim][index][1].end(); ++it) {
+	for (auto it = adjacency1d[dim][index][0].begin(); it != adjacency1d[dim][index][0].end(); ++it) {
 		calculate_dual_volume(dual_volume,
 							  temp_centers,
 							  vertices,
 							  simplices,
 							  adjacency1d,
-							  simplices[dim + 1][it->first],
-							  dim + 1,
-							  it->first,
-							  init_index);
+							  simplices[dim - 1][it->first],
+							  dim - 1,
+							  it->first);
 
 		temp_centers.pop_back();
 	}

@@ -18,6 +18,7 @@ int SimplicialComplex::build_complex() {
     compute_elements();
     compute_simplex_simplices();
 	compute_boundary_matrices();
+	compute_adjacency1d();
 
 	return SUCCESS;
 }

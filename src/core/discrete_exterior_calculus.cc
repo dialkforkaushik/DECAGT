@@ -57,7 +57,7 @@ int DiscreteExteriorCalculus::compute_hodge_star_k(int &k) {
 
 
 
-DiscreteExteriorCalculus::DiscreteExteriorCalculus() {
+DiscreteExteriorCalculus::DiscreteExteriorCalculus() : GeometryComplex() {
 
     set_hodge_stars_to_null();
 

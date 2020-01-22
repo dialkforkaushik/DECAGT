@@ -44,15 +44,13 @@ int barycentric_gradients(Vector2D &pts,
 
 int GeometryComplex::set_volumes_to_null() {
 
-    auto x = std::numeric_limits<double>::quiet_NaN();
-
     for (int i = 0; i < complex_dimension + 1; ++i) {
     	primal_volume.push_back(VectorD());
     	dual_volume.push_back(VectorD());
 
     	for (int j = 0; j < num_simplices[i]; ++j) {
-    		primal_volume[i].push_back(x);
-    		dual_volume[i].push_back(x);
+    		primal_volume[i].push_back(0.0);
+    		dual_volume[i].push_back(0.0);
     	}
     }
 
@@ -95,35 +93,21 @@ double GeometryComplex::compute_primal_volume_k(int &dim,
 int GeometryComplex::compute_dual_volume_k(int &dim,
 										   int &k) {
 
+	size_t N = complex_dimension + 1;
+
 	Vector2D temp_centers;
-	Vector2D dual_vol;
-
-	if(dual_volume.empty()) {
-		compute_adjacency1d();
-	}
-
-	for (int i = 0; i < dim; ++i) {
-		dual_vol.push_back(VectorD());
-	}
-	
-	dual_vol.push_back(VectorD());
-	for (int j = 0; j < k; ++j) {
-		dual_vol[dim].push_back(0.0);
-	}
-	dual_vol[dim].push_back(0.0);
 
 	calculate_dual_volume(dual_volume,
-						temp_centers,
-						vertices,
-						simplices,
-						adjacency1d,
-						simplices[dim][k],
-						dim,
-						k,
-						k);
+						  temp_centers,
+						  vertices,
+						  simplices,
+						  adjacency1d,
+						  simplices[N-1][k],
+						  N-1,
+						  k);
 	
 	temp_centers.clear();
-
+	
 	return SUCCESS;
 }
 
@@ -166,30 +150,20 @@ int GeometryComplex::compute_primal_volumes() {
 int GeometryComplex::compute_dual_volumes() {
 	size_t N = complex_dimension + 1;
 
-	if(dual_volume.empty()) {
-		compute_adjacency1d();
-	}
-
 	Vector2D temp_centers;
 
-	for (int i = 0; i < N; ++i) {
-		dual_volume.push_back(VectorD());
-		int row = num_simplices[i];
-
-		for (int j = 0; j < row; ++j) {
-			dual_volume[i].push_back(0.0);
-			calculate_dual_volume(dual_volume,
-								  temp_centers,
-								  vertices,
-								  simplices,
-								  adjacency1d,
-								  simplices[i][j],
-								  i,
-								  j,
-								  j);
-			
-			temp_centers.clear();
-		}
+	#pragma omp parallel for private(temp_centers)
+	for (int j = 0; j < num_simplices[N-1]; ++j) {
+		calculate_dual_volume(dual_volume,
+							  temp_centers,
+							  vertices,
+							  simplices,
+							  adjacency1d,
+							  simplices[N-1][j],
+							  N-1,
+							  j);
+		
+		temp_centers.clear();
 	}
 	
 	return SUCCESS;
@@ -262,14 +236,12 @@ GeometryComplex::GeometryComplex() {
 	
 	build_complex();
 	set_volumes_to_null();
-
 }
 
 GeometryComplex::GeometryComplex(SimplicialComplex sc) : SimplicialComplex(sc.vertices,
 																		   sc.simplex) {
 	build_complex();
-	compute_primal_volumes();
-	compute_dual_volumes();
+	set_volumes_to_null();
 }
 
 GeometryComplex::~GeometryComplex() {
