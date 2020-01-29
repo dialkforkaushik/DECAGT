@@ -6,16 +6,16 @@ DOXYGEN = doxygen
 
 doxyfile = decagt.inc
 
-all: doc test1
+all: doc decagt
 
 doc: $(doxyfile)
 	$(DOXYGEN) $(doxyfile)
 
-test1: $(OBJ1)
+decagt: $(OBJ1)
 	$(CC) $(OBJ1) -o $@
 
-test1.o: tests/test1.cpp $(HEADER)
-	$(CC) $(CFLAGS) $< -o $@
+# decagt.o: tests/test1.cpp $(HEADER)
+# 	$(CC) $(CFLAGS) $< -o $@
 
 simplicial_complex.o: src/core/simplicial_complex.cc src/core/definitions.h src/core/core_utils.h
 	$(CC) $(CFLAGS) $< -o $@
