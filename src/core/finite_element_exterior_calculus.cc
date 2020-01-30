@@ -28,7 +28,11 @@ int get_triplets(Vector3I &simplex_simplices,
 	int count = 0;
 	for (int v = 0; v < n; ++v) {
 		for (int w = 0; w < n; ++w) {
-			#pragma omp critical
+			#ifdef MULTICORE
+				#if MULTICORE
+					#pragma omp critical
+				#endif
+			#endif
 			triplet.push_back(TripletD(simplex_simplices[i][k][v], simplex_simplices[i][k][w], vals.coeffRef(count)));
 			++count;
 		}
@@ -205,7 +209,11 @@ int FiniteElementExteriorCalculus::compute_hodge_star_k(int &k) {
 	DenMatD d_lambda;
 	Vector2D pts;
 
-	#pragma omp parallel for private(A, B, pts, d_lambda, dets, vals)
+	#ifdef MULTICORE
+		#if MULTICORE
+			#pragma omp parallel for private(A, B, pts, d_lambda, dets, vals)
+		#endif
+	#endif
 	for (int i = 0; i < num_n_simplex; ++i) {
 		if (k > 0) {
 			dets.resize(num_k_form_pairs);
@@ -393,7 +401,11 @@ int FiniteElementExteriorCalculus::compute_hodge_stars() {
 		DenMatD d_lambda;
 		Vector2D pts;
 
-		#pragma omp parallel for private(A, B, pts, d_lambda, dets, vals)
+		#ifdef MULTICORE
+			#if MULTICORE
+				#pragma omp parallel for private(A, B, pts, d_lambda, dets, vals)
+			#endif
+		#endif
 		for (int i = 0; i < num_n_simplex; ++i) {
 			if (k > 0) {
 				dets.resize(num_k_form_pairs);

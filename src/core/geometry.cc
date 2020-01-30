@@ -125,6 +125,11 @@ int GeometryComplex::compute_primal_volumes() {
 		int row = num_simplices[i];
 		int col = simplices[i][0].size();
 
+		#ifdef MULTICORE
+			#if MULTICORE
+				#pragma omp parallel for shared(primal_volume, row, col)
+			#endif
+		#endif
 		for (int j = 0; j < row; ++j) {
 			Vector2D pts;
 			for (int k = 0; k < col; ++k) {
@@ -138,6 +143,11 @@ int GeometryComplex::compute_primal_volumes() {
 				unsigned_volume(pts, vol);
 			}
 			
+			#ifdef MULTICORE
+				#if MULTICORE
+					#pragma omp critical
+				#endif
+			#endif
 			primal_volume[i].push_back(vol);
 		}
 	}
@@ -151,8 +161,12 @@ int GeometryComplex::compute_dual_volumes() {
 	size_t N = complex_dimension + 1;
 
 	Vector2D temp_centers;
+	#ifdef MULTICORE
+		#if MULTICORE
+			#pragma omp parallel for private(temp_centers)
+		#endif
+	#endif
 
-	#pragma omp parallel for private(temp_centers)
 	for (int j = 0; j < num_simplices[N-1]; ++j) {
 		calculate_dual_volume(dual_volume,
 							  temp_centers,
@@ -236,6 +250,8 @@ GeometryComplex::GeometryComplex() {
 	
 	build_complex();
 	set_volumes_to_null();
+	compute_primal_volumes();
+	compute_dual_volumes();
 }
 
 GeometryComplex::GeometryComplex(SimplicialComplex sc) : SimplicialComplex(sc.vertices,
