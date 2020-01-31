@@ -126,9 +126,7 @@ int GeometryComplex::compute_primal_volumes() {
 		int col = simplices[i][0].size();
 
 		#ifdef MULTICORE
-			#if MULTICORE
-				#pragma omp parallel for shared(primal_volume, row, col)
-			#endif
+			#pragma omp parallel for shared(primal_volume, row, col)
 		#endif
 		for (int j = 0; j < row; ++j) {
 			Vector2D pts;
@@ -144,9 +142,7 @@ int GeometryComplex::compute_primal_volumes() {
 			}
 			
 			#ifdef MULTICORE
-				#if MULTICORE
-					#pragma omp critical
-				#endif
+				#pragma omp critical
 			#endif
 			primal_volume[i].push_back(vol);
 		}
@@ -162,9 +158,7 @@ int GeometryComplex::compute_dual_volumes() {
 
 	Vector2D temp_centers;
 	#ifdef MULTICORE
-		#if MULTICORE
-			#pragma omp parallel for private(temp_centers)
-		#endif
+		#pragma omp parallel for private(temp_centers)
 	#endif
 
 	for (int j = 0; j < num_simplices[N-1]; ++j) {

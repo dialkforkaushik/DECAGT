@@ -178,9 +178,7 @@ int calculate_dual_volume(Vector2D &dual_volume,
 	unsigned_volume(temp_centers, vol);
 
 	#ifdef MULTICORE
-		#if MULTICORE
-			#pragma omp critical
-		#endif
+		#pragma omp critical
 	#endif
 	dual_volume[dim][index] += vol;
 		

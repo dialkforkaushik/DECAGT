@@ -74,9 +74,7 @@ int SimplicialComplex::compute_boundary_matrices() {
 		boundary_matrix_col_major.resize(num_complex_lowdim,
                                num_complex_highdim);
 		#ifdef MULTICORE
-			#if MULTICORE
-				#pragma omp parallel for shared(triplet)
-			#endif
+			#pragma omp parallel for shared(triplet)
 		#endif
 
 		for (int j = 0; j < num_complex_highdim; ++j) {
@@ -103,9 +101,7 @@ int SimplicialComplex::compute_boundary_matrices() {
 						x = -1;
 				}
 				#ifdef MULTICORE
-					#if MULTICORE 
-						#pragma omp critical
-					#endif
+					#pragma omp critical
 				#endif
 				triplet.push_back(TripletI(index, j, x));
 			}

@@ -1,10 +1,16 @@
-cmake_minimum_required(VERSION 3.2)
-ADD_DEFINITIONS(-std=c++11)
+cmake_minimum_required(VERSION 2.0)
 
 project(decagt)
 
+SET(MULTICORE true)
+IF(MULTICORE==true)
+    ADD_DEFINITIONS(-DMULTICORE)
+ENDIF(MULTICORE)
+
+SET(CMAKE_EXE_LINKER_FLAGS "-std=c++11 -fopenmp")
+
 # Set source directory
-set(SOURCE_DIR "src/core")
+SET(SOURCE_DIR "src/core")
 
 # Tell CMake that headers are also in SOURCE_DIR
 include_directories(${SOURCE_DIR})
@@ -29,8 +35,8 @@ execute_process(
 
 if(NOT (${CMAKE_CURRENT_BINARY_DIR} STREQUAL ${CMAKE_SOURCE_DIR}))
 add_custom_command(TARGET decagt
-				   POST_BUILD
-				   COMMAND cp -r ${CMAKE_CURRENT_BINARY_DIR}/*.so ${CMAKE_SOURCE_DIR})
+           POST_BUILD
+           COMMAND cp -r ${CMAKE_CURRENT_BINARY_DIR}/*.so ${CMAKE_SOURCE_DIR})
 endif()
 
 install(TARGETS decagt

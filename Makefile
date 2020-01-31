@@ -3,7 +3,13 @@ MULTICORE=true
 CC = clang++ -std=c++11 -O2 -fopenmp
 OBJ1 = dec.o simplicial_complex.o utilities.o geometry.o discrete_exterior_calculus.o finite_element_exterior_calculus.o
 HEADER = src/core/simplicial_complex.h src/core/definitions.h src/core/core_utils.h src/core/geometry.h src/core/discrete_exterior_calculus.h src/core/finite_element_exterior_calculus.h lib/Eigen
-CFLAGS = -c -Wall -Isrc/core -Ilib -DMULTICORE=$(MULTICORE)
+
+ifeq ($(MULTICORE), true)
+	CFLAGS = -c -Wall -Isrc/core -Ilib -DMULTICORE
+else
+	CFLAGS = -c -Wall -Isrc/core -Ilib
+endif
+
 DOXYGEN = doxygen
 
 doxyfile = decagt.inc
