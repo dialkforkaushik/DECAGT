@@ -12,6 +12,11 @@
 #include <Eigen/Eigen>
 #include <set>
 
+#ifdef PYTHON
+	#include <pybind11/pybind11.h>
+	#include <pybind11/stl.h>
+	#include <pybind11/numpy.h>
+#endif
 
 
 int barycentric_gradients(Vector2D &pts,
@@ -113,6 +118,10 @@ int GeometryComplex::compute_dual_volume_k(int &dim,
 
 
 int GeometryComplex::compute_primal_volumes() {
+	#ifdef PYTHON
+		pybind11::gil_scoped_acquire acquire;
+	#endif
+
 	size_t N = complex_dimension + 1;
 
 	primal_volume.push_back(VectorD());
@@ -126,7 +135,7 @@ int GeometryComplex::compute_primal_volumes() {
 		int col = simplices[i][0].size();
 
 		#ifdef MULTICORE
-			#pragma omp parallel for shared(primal_volume, row, col)
+			#pragma omp parallel for shared(row, col)
 		#endif
 		for (int j = 0; j < row; ++j) {
 			Vector2D pts;
@@ -154,6 +163,10 @@ int GeometryComplex::compute_primal_volumes() {
 
 
 int GeometryComplex::compute_dual_volumes() {
+	#ifdef PYTHON
+		pybind11::gil_scoped_acquire acquire;
+	#endif
+
 	size_t N = complex_dimension + 1;
 
 	Vector2D temp_centers;

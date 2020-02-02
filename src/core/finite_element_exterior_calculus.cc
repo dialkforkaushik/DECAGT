@@ -16,6 +16,11 @@
 #include <limits>
 #include <iomanip>
 
+#ifdef PYTHON
+	#include <pybind11/pybind11.h>
+	#include <pybind11/stl.h>
+	#include <pybind11/numpy.h>
+#endif
 
 
 int get_triplets(Vector3I &simplex_simplices,
@@ -80,7 +85,10 @@ inline int barycentric_gradients(Vector2D &pts,
 
 
 int FiniteElementExteriorCalculus::compute_hodge_star_k(int &k) {
-
+	#ifdef PYTHON
+		pybind11::gil_scoped_acquire acquire;
+	#endif
+	
 	Vector3I temp_simplices;
 	temp_simplices.push_back(simplex_sorted);
 	for (int i = 1; i < complex_dimension + 1; ++i) {
@@ -268,7 +276,10 @@ int FiniteElementExteriorCalculus::compute_hodge_star_k(int &k) {
 
 
 int FiniteElementExteriorCalculus::compute_hodge_stars() {
-
+	#ifdef PYTHON
+		pybind11::gil_scoped_acquire acquire;
+	#endif
+	
 	Vector3I temp_simplices;
 	temp_simplices.push_back(simplex_sorted);
 	for (int i = 1; i < complex_dimension + 1; ++i) {

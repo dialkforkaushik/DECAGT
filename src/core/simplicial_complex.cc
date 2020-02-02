@@ -11,6 +11,12 @@
 #include <Eigen/Eigen>
 #include <set>
 
+#ifdef PYTHON
+	#include <pybind11/pybind11.h>
+	#include <pybind11/stl.h>
+	#include <pybind11/numpy.h>
+#endif
+
 
 int SimplicialComplex::build_complex() {
 	
@@ -55,6 +61,10 @@ int SimplicialComplex::compute_simplices() {
 
 
 int SimplicialComplex::compute_boundary_matrices() {
+	#ifdef PYTHON
+		pybind11::gil_scoped_acquire acquire;
+	#endif
+
 	int n = complex_dimension + 1;
 	boundary_matrices.reserve(n - 1);
 
