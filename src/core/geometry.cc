@@ -47,7 +47,7 @@ int barycentric_gradients(Vector2D &pts,
 }
 
 
-int GeometryComplex::set_volumes_to_null() {
+int GeometryComplex::set_volumes_to_nil() {
 
     for (int i = 0; i < complex_dimension + 1; ++i) {
     	primal_volume.push_back(VectorD());
@@ -108,8 +108,10 @@ int GeometryComplex::compute_dual_volume_k(int &dim,
 						  simplices,
 						  adjacency1d,
 						  simplices[N-1][k],
+						  highest_dim_circumcenters[k],
 						  N-1,
-						  k);
+						  k,
+						  complex_dimension);
 	
 	temp_centers.clear();
 	
@@ -181,12 +183,14 @@ int GeometryComplex::compute_dual_volumes() {
 							  simplices,
 							  adjacency1d,
 							  simplices[N-1][j],
+							  highest_dim_circumcenters[j],
 							  N-1,
-							  j);
+							  j,
+							  complex_dimension);
 		
 		temp_centers.clear();
 	}
-	
+
 	return SUCCESS;
 }
 
@@ -199,13 +203,13 @@ std::tuple<Vector2D, DenMatD> GeometryComplex::simplex_quivers(VectorD form) {
 	VectorD sum(embedding_dimension, 0);
 	for (int i = 0; i < num_simplices[complex_dimension]; ++i) {
 		std::fill(sum.begin(), sum.end(), 0);
-		for (int j = 0; j < complex_dimension + 1; ++j) {
+		for (size_t j = 0; j < complex_dimension + 1; ++j) {
 			// sumvertices[simplices[complex_dimension][i][j]];
-			for (int k = 0; k < embedding_dimension; ++k) {
+			for (size_t k = 0; k < embedding_dimension; ++k) {
 				sum[k] += vertices[simplices[complex_dimension][i][j]][k];
 			}
 		}
-		for (int j = 0; j < embedding_dimension; ++j) {
+		for (size_t j = 0; j < embedding_dimension; ++j) {
 			sum[j] = sum[j]/(complex_dimension + 1);
 		}
 
@@ -217,7 +221,7 @@ std::tuple<Vector2D, DenMatD> GeometryComplex::simplex_quivers(VectorD form) {
     for (int i = 0; i < num_simplices[complex_dimension]; ++i) {
     	DenMatD d_lambda;
     	Vector2D pts;
-    	for (int j = 0; j < complex_dimension + 1; ++j) {
+    	for (size_t j = 0; j < complex_dimension + 1; ++j) {
     		pts.push_back(vertices[simplex_sorted[i][j]]);
     	}
     	barycentric_gradients(pts, d_lambda);
@@ -226,22 +230,22 @@ std::tuple<Vector2D, DenMatD> GeometryComplex::simplex_quivers(VectorD form) {
     	get_combinations_simplex(simplex_sorted[i], edges, 2);
 
     	VectorI indices;
-    	for (int j = 0; j < edges.size(); ++j) {
+    	for (size_t j = 0; j < edges.size(); ++j) {
     		indices.push_back(elements[edges[j]]);
     	}
 
     	VectorD values;
-    	for (int j = 0; j < indices.size(); ++j) {
+    	for (size_t j = 0; j < indices.size(); ++j) {
     		values.push_back(form[indices[j]]);
     	}
 
     	Vector2I combinations;
     	VectorI range;
-    	for (int j = 0; j < simplex_sorted[i].size(); ++j) {
+    	for (size_t j = 0; j < simplex_sorted[i].size(); ++j) {
     		range.push_back(j);
     	}
     	get_combinations_simplex(range, combinations, 2);
-    	for (int j = 0; j < values.size(); ++j) {
+    	for (size_t j = 0; j < values.size(); ++j) {
     		quiver_dirs.row(i) += values[j] * (d_lambda.row(combinations[j][1]) - d_lambda.row(combinations[j][0]));
     	}
 
@@ -252,19 +256,40 @@ std::tuple<Vector2D, DenMatD> GeometryComplex::simplex_quivers(VectorD form) {
     return std::make_tuple(quiver_bases, quiver_dirs);
 }
 
+int GeometryComplex::get_highest_dim_circumcenters() {
+	for (size_t j = 0; j < num_simplices[complex_dimension]; ++j) {
+		
+		VectorD center;
+		double radius;
+
+		Vector2D vertex_pts;
+
+		for (int i = 0; i < complex_dimension + 1; ++i) {
+			vertex_pts.push_back(vertices[simplices[complex_dimension][j][i]]);
+		}
+		get_circumcenter(center,
+						 radius,
+						 vertex_pts);
+
+		highest_dim_circumcenters.push_back(center);
+	}
+
+	return SUCCESS;
+}
+
 
 GeometryComplex::GeometryComplex() {
 	
 	build_complex();
-	set_volumes_to_null();
-	compute_primal_volumes();
-	compute_dual_volumes();
+	set_volumes_to_nil();
+	get_highest_dim_circumcenters();
 }
 
 GeometryComplex::GeometryComplex(SimplicialComplex sc) : SimplicialComplex(sc.vertices,
 																		   sc.simplex) {
 	build_complex();
-	set_volumes_to_null();
+	set_volumes_to_nil();
+	get_highest_dim_circumcenters();
 }
 
 GeometryComplex::~GeometryComplex() {

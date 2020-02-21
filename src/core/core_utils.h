@@ -35,8 +35,10 @@ int calculate_dual_volume(Vector2D &dual_volume,
 						  Vector3I &simplices,
 						  VectorMap3I &adjacency1d,
 						  VectorI &pts,
+						  VectorD &highest_dim_circumcenter,
 						  int dim,
-						  int index);
+						  int index,
+						  size_t complex_dimension);
 
 int get_circumcenter(VectorD &center,
 				     double &radius,

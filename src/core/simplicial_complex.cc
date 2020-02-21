@@ -17,12 +17,11 @@
 	#include <pybind11/numpy.h>
 #endif
 
-
 int SimplicialComplex::build_complex() {
 	
 	compute_simplices();
     compute_elements();
-    compute_simplex_simplices();
+    compute_simplex_sub_simplices();
 	compute_boundary_matrices();
 	compute_adjacency1d();
 
@@ -76,8 +75,8 @@ int SimplicialComplex::compute_boundary_matrices() {
 		Vector2I complex_highdim = simplices[i];
 		Vector2I complex_lowdim = simplices[i - 1];
 
-		int num_complex_highdim = complex_highdim.size();
-		int num_complex_lowdim = complex_lowdim.size();
+		size_t num_complex_highdim = complex_highdim.size();
+		size_t num_complex_lowdim = complex_lowdim.size();
 
 		boundary_matrix.resize(num_complex_lowdim,
                                num_complex_highdim);
@@ -157,9 +156,9 @@ int SimplicialComplex::compute_adjacency1d() {
 			else if (i == complex_dimension) {
 				simplex_map.clear();
 
-				int N = simplex_simplices[j][complex_dimension - 1].size();
+				int N = simplex_sub_simplices[j][complex_dimension - 1].size();
 				for (int k = 0; k < N; ++k) {
-					simplex_map[simplex_simplices[j][complex_dimension - 1][k]] = j;
+					simplex_map[simplex_sub_simplices[j][complex_dimension - 1][k]] = j;
 				}
 
 				adjacency1d[i][j].push_back(simplex_map);
@@ -275,20 +274,20 @@ inline int SimplicialComplex::compute_elements() {
 }
 
 
-inline int SimplicialComplex::compute_simplex_simplices() {
+inline int SimplicialComplex::compute_simplex_sub_simplices() {
 	int n = simplex.size();
 	int N = simplex[0].size();
 
-	simplex_simplices.reserve(n);
+	simplex_sub_simplices.reserve(n);
 
     Vector2I complex;
 
 	for (int i = 0; i < n; ++i) {
-		simplex_simplices.push_back(Vector2I());
+		simplex_sub_simplices.push_back(Vector2I());
 		VectorI vec;
 		vec.reserve(1);
 		vec.push_back(i);
-		simplex_simplices[i].push_back(vec);
+		simplex_sub_simplices[i].push_back(vec);
 		vec.clear();
 
 		for (int j = N-1; j > 0; --j) {
@@ -297,7 +296,7 @@ inline int SimplicialComplex::compute_simplex_simplices() {
 			for (int k = 0; k < complex.size(); ++k) {
 				vec.push_back(elements[complex[k]]);
 			}
-			simplex_simplices[i].insert(simplex_simplices[i].begin(), vec);
+			simplex_sub_simplices[i].insert(simplex_sub_simplices[i].begin(), vec);
 			vec.clear();
 			
 			complex.clear();
@@ -317,7 +316,7 @@ Vector2D SimplicialComplex::circumcenter(int dim) {
 
 	for (int i = 0; i < num_simplices[dim]; ++i) {
 		pts.clear();
-		for (int j = 0; j < simplices[dim][i].size(); ++j) {
+		for (size_t j = 0; j < simplices[dim][i].size(); ++j) {
 			pts.push_back(vertices[simplices[dim][i][j]]);
 			
 		}

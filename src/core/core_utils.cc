@@ -117,7 +117,9 @@ DenMatD circumcenter_barycentric(DenMatD &pts_matrix, DenMatD &bary_coords) {
 	DenMatD b (mat2.cols() + 1, 1);
 	b.topRows(mat2.cols()) = mat2.transpose();
 	b.bottomRows(1) = mat3.transpose();
-	DenMatD x = A.colPivHouseholderQr().solve(b);
+	// DenMatD x = A.colPivHouseholderQr().solve(b);
+	// DenMatD x = A.bdcSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(b);
+	DenMatD x = (A.transpose() * A).ldlt().solve(A.transpose() * b);
 	bary_coords = x.topRows(x.rows() - 1);
 
 	return bary_coords;
@@ -162,31 +164,39 @@ int calculate_dual_volume(Vector2D &dual_volume,
 						Vector3I &simplices,
 						VectorMap3I &adjacency1d,
 						VectorI &pts,
+						VectorD &highest_dim_circumcenter,
 						int dim,
-						int index) {
+						int index,
+						size_t complex_dimension) {
 
 	VectorD center;
 	double radius;
+	double vol;
 
 	Vector2D vertex_pts;
 
-	for (int i = 0; i < dim + 1; ++i) {
-		vertex_pts.push_back(vertices[pts[i]]);
+	
+	if (dim == complex_dimension) {
+		temp_centers.push_back(highest_dim_circumcenter);
 	}
-	get_circumcenter(center,
-				radius,
-				vertex_pts);
+	else {
+		for (int i = 0; i < dim + 1; ++i) {
+			vertex_pts.push_back(vertices[pts[i]]);
+		}
+		get_circumcenter(center,
+					radius,
+					vertex_pts);
 
-	temp_centers.push_back(center);
+		temp_centers.push_back(center);
+	}	
 
-	double vol;
 	unsigned_volume(temp_centers, vol);
 
 	#ifdef MULTICORE
 		#pragma omp critical
 	#endif
+
 	dual_volume[dim][index] += vol;
-		
 	
 	if (dim == 0) {
 		return SUCCESS;
@@ -199,8 +209,10 @@ int calculate_dual_volume(Vector2D &dual_volume,
 							  simplices,
 							  adjacency1d,
 							  simplices[dim - 1][it->first],
+							  highest_dim_circumcenter,
 							  dim - 1,
-							  it->first);
+							  it->first,
+							  complex_dimension);
 
 		temp_centers.pop_back();
 	}

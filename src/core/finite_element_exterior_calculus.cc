@@ -261,7 +261,7 @@ int FiniteElementExteriorCalculus::compute_hodge_star_k(int &k) {
 
 		vals = dets_to_vals * dets * primal_volume[dim][i] * scale_integration;
 
-		get_triplets(simplex_simplices, i, k, vals, triplet);
+		get_triplets(simplex_sub_simplices, i, k, vals, triplet);
 	}
 	
 	SpMatD mass_matrix(num_k_simplices, num_k_simplices);
@@ -454,7 +454,7 @@ int FiniteElementExteriorCalculus::compute_hodge_stars() {
 
 			vals = dets_to_vals * dets * primal_volume[dim][i] * scale_integration;
 
-			get_triplets(simplex_simplices, i, k, vals, triplet);
+			get_triplets(simplex_sub_simplices, i, k, vals, triplet);
 		}
 		
 		SpMatD mass_matrix(num_k_simplices, num_k_simplices);

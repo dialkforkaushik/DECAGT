@@ -18,7 +18,7 @@ public:
     VectorSpmatIC boundary_matrices_col_major;
     Vector3I simplices;
     MapVectorI elements;
-    Vector3I simplex_simplices;
+    Vector3I simplex_sub_simplices;
     VectorMap3I adjacency1d;
     VectorMap3I adjacency2d;
 
@@ -47,7 +47,7 @@ public:
 
     int compute_elements();
 
-    int compute_simplex_simplices();
+    int compute_simplex_sub_simplices();
 
     int build_complex();
 
