@@ -47,6 +47,8 @@ typedef Eigen::Triplet < int > TripletI;
 typedef std::vector < TripletD > VectorTripletD;
 typedef std::vector < TripletI > VectorTripletI;
 
+typedef double(*function_t)(VectorD);
+
 #endif
 
 

@@ -19,9 +19,10 @@
 int DiscreteExteriorCalculus::set_hodge_stars_to_null() {
 
     for (int i = 0; i < complex_dimension + 1; ++i) {
-        SpMatD matrix (simplices[i].size(), simplices[i].size());
+        size_t simplices_i_size = simplices[i].size();
+        SpMatD matrix (simplices_i_size, simplices_i_size);
 
-        for (int j = 0; j < simplices[i].size(); j++) {
+        for (size_t j = 0; j < simplices_i_size; j++) {
             matrix.coeffRef(j, j) = std::numeric_limits<double>::quiet_NaN();
         }
 
@@ -34,8 +35,9 @@ int DiscreteExteriorCalculus::set_hodge_stars_to_null() {
 
 int DiscreteExteriorCalculus::compute_hodge_stars() {
 
-    for (int i = 0; i < complex_dimension + 1; ++i) {
-    	for (int j = 0; j < simplices[i].size(); j++) {
+    for (size_t i = 0; i < complex_dimension + 1; ++i) {
+        size_t simplices_i_size = simplices[i].size();
+    	for (size_t j = 0; j < simplices_i_size; j++) {
     		if (std::isnan(hodge_stars[i].coeffRef(j, j)))
     			hodge_stars[i].coeffRef(j, j) = dual_volume[i][j] / primal_volume[i][j];
     	}

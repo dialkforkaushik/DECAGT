@@ -230,22 +230,26 @@ std::tuple<Vector2D, DenMatD> GeometryComplex::simplex_quivers(VectorD form) {
     	get_combinations_simplex(simplex_sorted[i], edges, 2);
 
     	VectorI indices;
-    	for (size_t j = 0; j < edges.size(); ++j) {
+    	size_t edges_size = edges.size();
+    	for (size_t j = 0; j < edges_size; ++j) {
     		indices.push_back(elements[edges[j]]);
     	}
 
     	VectorD values;
-    	for (size_t j = 0; j < indices.size(); ++j) {
+    	size_t indices_size = indices.size();
+    	for (size_t j = 0; j < indices_size; ++j) {
     		values.push_back(form[indices[j]]);
     	}
 
     	Vector2I combinations;
     	VectorI range;
-    	for (size_t j = 0; j < simplex_sorted[i].size(); ++j) {
+    	size_t simplex_sorted_i_size = simplex_sorted[i].size();
+    	for (size_t j = 0; j < simplex_sorted_i_size; ++j) {
     		range.push_back(j);
     	}
     	get_combinations_simplex(range, combinations, 2);
-    	for (size_t j = 0; j < values.size(); ++j) {
+    	size_t values_size = values.size();
+    	for (size_t j = 0; j < values_size; ++j) {
     		quiver_dirs.row(i) += values[j] * (d_lambda.row(combinations[j][1]) - d_lambda.row(combinations[j][0]));
     	}
 
@@ -257,6 +261,13 @@ std::tuple<Vector2D, DenMatD> GeometryComplex::simplex_quivers(VectorD form) {
 }
 
 int GeometryComplex::get_highest_dim_circumcenters() {
+	#ifdef PYTHON
+		pybind11::gil_scoped_acquire acquire;
+	#endif
+
+	#ifdef MULTICORE
+		#pragma omp parallel for
+	#endif
 	for (size_t j = 0; j < num_simplices[complex_dimension]; ++j) {
 		
 		VectorD center;
@@ -271,6 +282,9 @@ int GeometryComplex::get_highest_dim_circumcenters() {
 						 radius,
 						 vertex_pts);
 
+		#ifdef MULTICORE
+			#pragma omp critical
+		#endif
 		highest_dim_circumcenters.push_back(center);
 	}
 

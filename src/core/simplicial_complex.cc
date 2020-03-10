@@ -35,7 +35,7 @@ int SimplicialComplex::compute_simplices() {
 	simplices.reserve(n);
 
     simplex_sorted = simplex;
-	for (int i = 0; i < N; ++i) {
+	for (size_t i = 0; i < N; ++i) {
 		std::sort(simplex_sorted[i].begin(), simplex_sorted[i].end());
 	}
 
@@ -44,7 +44,7 @@ int SimplicialComplex::compute_simplices() {
 
 	num_simplices.push_back(simplex.size());
 
-	for (int i = 1; i < n; ++i) {
+	for (size_t i = 1; i < n; ++i) {
 		get_combinations_mesh(simplices[0], complex);
 		simplices.insert(simplices.begin(), complex);
 		num_simplices.insert(num_simplices.begin(), complex.size());
@@ -195,13 +195,15 @@ int SimplicialComplex::compute_adjacency2d() {
 	for (int i = 0; i < complex_dimension + 1; ++i) {
 		adjacency2d.push_back(VectorMap2I());
 
-		for (int j = 0; j < simplices[i].size(); ++j) {
+		size_t simplices_i_size = simplices[i].size();
+		for (size_t j = 0; j < simplices_i_size; ++j) {
 			adjacency2d[i].push_back(VectorMapI());
 			MapI simplex_map;
 			if (i == 0) {
 				auto vec = boundary_matrices[i].row(j);
 				adjacency2d[i][j].push_back(simplex_map);
-				for (int k = 0; k < vec.size(); ++k)
+				size_t vec_size = vec.size();
+				for (size_t k = 0; k < vec_size; ++k)
 				{
 			        if (vec.coeff(k) != 0) {
 			        	for (auto it = adjacency1d[i+1][k][0].begin(); it != adjacency1d[i+1][k][0].end(); ++it) {
@@ -215,7 +217,8 @@ int SimplicialComplex::compute_adjacency2d() {
 			}
 			else if (i == complex_dimension) {
 				auto vec = boundary_matrices[i - 1].col(j);
-				for (int k = 0; k < vec.size(); ++k)
+				size_t vec_size = vec.size();
+				for (size_t k = 0; k < vec_size; ++k)
 				{
 			        if (vec.coeff(k) != 0) {
 			        	for (auto it = adjacency1d[i-1][k][1].begin(); it != adjacency1d[i-1][k][1].end(); ++it) {
@@ -229,7 +232,8 @@ int SimplicialComplex::compute_adjacency2d() {
 			}
 			else {
 				auto vec = boundary_matrices[i-1].col(j);
-				for (int k = 0; k < vec.size(); ++k)
+				size_t vec_size = vec.size();
+				for (size_t k = 0; k < vec_size; ++k)
 				{
 			        if (vec.coeff(k) != 0) {
 			        	for (auto it = adjacency1d[i-1][k][1].begin(); it != adjacency1d[i-1][k][1].end(); ++it) {
@@ -243,7 +247,8 @@ int SimplicialComplex::compute_adjacency2d() {
 				simplex_map.clear();
 
 				auto vec1 = boundary_matrices[i].row(j);
-				for (int k = 0; k < vec1.size(); ++k)
+				size_t vec1_size = vec1.size();
+				for (size_t k = 0; k < vec1_size; ++k)
 				{
 			        if (vec1.coeff(k) != 0) {
 			        	for (auto it = adjacency1d[i+1][k][0].begin(); it != adjacency1d[i+1][k][0].end(); ++it) {
@@ -263,8 +268,8 @@ int SimplicialComplex::compute_adjacency2d() {
 
 
 inline int SimplicialComplex::compute_elements() {
-	for (int i = 0; i < complex_dimension + 1; ++i) {
-		int N = simplices[i].size();
+	for (size_t i = 0; i < complex_dimension + 1; ++i) {
+		size_t N = simplices[i].size();
 		for (int j = 0; j < N; ++j) {
 			elements[simplices[i][j]] = j;
 		}
@@ -274,15 +279,15 @@ inline int SimplicialComplex::compute_elements() {
 }
 
 
-inline int SimplicialComplex::compute_simplex_sub_simplices() {
-	int n = simplex.size();
-	int N = simplex[0].size();
+int SimplicialComplex::compute_simplex_sub_simplices() {
+	size_t n = simplex.size();
+	size_t N = simplex[0].size();
 
 	simplex_sub_simplices.reserve(n);
 
     Vector2I complex;
 
-	for (int i = 0; i < n; ++i) {
+	for (size_t i = 0; i < n; ++i) {
 		simplex_sub_simplices.push_back(Vector2I());
 		VectorI vec;
 		vec.reserve(1);
@@ -290,12 +295,14 @@ inline int SimplicialComplex::compute_simplex_sub_simplices() {
 		simplex_sub_simplices[i].push_back(vec);
 		vec.clear();
 
-		for (int j = N-1; j > 0; --j) {
+		for (size_t j = N-1; j > 0; --j) {
 			get_combinations_simplex(simplices[complex_dimension][i], complex, j);
 			VectorI vec;
-			for (int k = 0; k < complex.size(); ++k) {
+			size_t complex_size = complex.size();
+			for (size_t k = 0; k < complex_size; ++k) {
 				vec.push_back(elements[complex[k]]);
 			}
+
 			simplex_sub_simplices[i].insert(simplex_sub_simplices[i].begin(), vec);
 			vec.clear();
 			
@@ -316,7 +323,8 @@ Vector2D SimplicialComplex::circumcenter(int dim) {
 
 	for (int i = 0; i < num_simplices[dim]; ++i) {
 		pts.clear();
-		for (size_t j = 0; j < simplices[dim][i].size(); ++j) {
+		size_t size = simplices[dim][i].size();
+		for (size_t j = 0; j < size; ++j) {
 			pts.push_back(vertices[simplices[dim][i][j]]);
 			
 		}

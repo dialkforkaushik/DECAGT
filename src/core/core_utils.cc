@@ -12,13 +12,14 @@
 #include <set>
 #include <cmath>
 #include <limits>
+#include <dlfcn.h>
+#include <stdlib.h>
 
 #ifdef PYTHON
 	#include <pybind11/pybind11.h>
 	#include <pybind11/stl.h>
 	#include <pybind11/numpy.h>
 #endif
-
 
 int factorial(int &n) {
 	if (n == 0) {
@@ -85,7 +86,7 @@ int signed_volume(Vector2D &pts,
     return SUCCESS;
 }
 
-DenMatD circumcenter_barycentric(DenMatD &pts_matrix, DenMatD &bary_coords) {
+inline DenMatD circumcenter_barycentric(DenMatD &pts_matrix, DenMatD &bary_coords) {
 	int row = pts_matrix.rows();
 	int col = pts_matrix.cols();
 
@@ -117,18 +118,16 @@ DenMatD circumcenter_barycentric(DenMatD &pts_matrix, DenMatD &bary_coords) {
 	DenMatD b (mat2.cols() + 1, 1);
 	b.topRows(mat2.cols()) = mat2.transpose();
 	b.bottomRows(1) = mat3.transpose();
-	// DenMatD x = A.colPivHouseholderQr().solve(b);
-	// DenMatD x = A.bdcSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(b);
-	DenMatD x = (A.transpose() * A).ldlt().solve(A.transpose() * b);
+	DenMatD x = A.colPivHouseholderQr().solve(b);
 	bary_coords = x.topRows(x.rows() - 1);
 
 	return bary_coords;
 }
 
 
-int get_circumcenter(VectorD &center,
-				     double &radius,
-				     Vector2D &pts) {
+inline int get_circumcenter(VectorD &center,
+				     		double &radius,
+				     		Vector2D &pts) {
 
 	int row = pts.size();
     int col = pts[0].size();
@@ -380,7 +379,8 @@ int get_combinations_simplex(Vector2I &simplex,
 	int n = simplex.size();
 
 	if (k > n) {
-		for (int i = 0; i < simplex.size(); ++i) {
+		size_t simplex_size = simplex.size();
+		for (int i = 0; i < simplex_size; ++i) {
 			combination.push_back(Vector2I());
 			combination[i].push_back(simplex[i]);
 			}
@@ -419,12 +419,270 @@ int is_rotated(VectorI v1,
     }
   
     return SUCCESS; 
-} 
+}
+
+
+int k_cochain_norm(EigVectorD U,
+				   std::string weight,
+				   VectorSpmatD hodge_stars,
+				   int k) {
+	double norm;
+	norm = U.transpose() * hodge_stars[k] * U;
+	norm = sqrt(norm);
+
+	return SUCCESS;
+}
+
+
+int get_barycentric(VectorD &point,
+					VectorI &simplex,
+					Vector2D &vertices,
+					EigVectorD &bary_coords) {
+
+    size_t col = simplex.size();
+    size_t row = vertices[0].size() + 1;
+
+    DenMatD A = DenMatD::Ones(row, col);
+    EigVectorD b = DenMatD::Ones(row, 1);
+
+    for (size_t i = 0; i < col; ++i) {
+    	VectorD pts = vertices[simplex[i]];
+    	for (size_t j = 0; j < row - 1; ++j) {
+    		A.coeffRef(j+1,i) = pts[j];
+    	}
+    }
+
+    for (size_t i = 0; i < row - 1; ++i) {
+    	b.coeffRef(i+1) = point[i];
+    }
+
+    bary_coords = A.colPivHouseholderQr().solve(b);
+
+    return SUCCESS;
+}
+
+
+int get_simplices_from_sub_simplex(VectorI &simplex_simplices,
+								   VectorMap3I &adjacency1d,
+								   int sub_simplex_index,
+								   size_t dim,
+								   size_t &complex_dimension) {
+
+	if (dim == complex_dimension) {
+		simplex_simplices.push_back(sub_simplex_index);
+		return SUCCESS;
+	}
+
+	for (auto it = adjacency1d[dim][sub_simplex_index][1].begin(); it != adjacency1d[dim][sub_simplex_index][1].end(); ++it) {
+		get_simplices_from_sub_simplex(simplex_simplices,
+									   adjacency1d,
+									   it -> first,
+									   dim + 1,
+									   complex_dimension);
+	}
+
+	simplex_simplices.erase(std::unique(simplex_simplices.begin(), simplex_simplices.end()), simplex_simplices.end());
+	return SUCCESS;
+}
+
+
+int get_closest_simplex_to_point(VectorD &point,
+								 VectorI &simplex,
+								 Vector2D &vertices,
+								 Vector3I &simplices,
+								 VectorMap3I &adjacency1d,
+								 size_t embedding_dimension,
+								 size_t complex_dimension) {
+	VectorD distances;
+	double distance;
+	size_t vertices_size = vertices.size();
+	for (size_t i = 0; i < vertices_size; ++i) {
+		distance = 0;
+		for (size_t j = 0; j < embedding_dimension; ++j) {
+			distance += pow(vertices[i][j] - point[j], 2);
+		}
+		distances.push_back(distance);
+	}
+
+	auto minimum = std::min_element(distances.begin(), distances.end());
+	int vertex = std::distance(distances.begin(), minimum);
+
+	VectorI vertex_simplices;
+	get_simplices_from_sub_simplex(vertex_simplices,
+								   adjacency1d,
+								   vertex,
+								   0,
+								   complex_dimension);
+
+	size_t vertex_simplices_size = vertex_simplices.size();
+	EigVectorD bary_coords;
+
+	#ifdef MULTICORE
+		#pragma omp parallel for private(vertex_simplices_size, bary_coords)
+	#endif
+	for(size_t i = 0; i < vertex_simplices_size; ++i) {
+		get_barycentric(point,
+						simplices[complex_dimension][vertex_simplices[i]],
+						vertices,
+						bary_coords);
+
+		size_t bary_coords_size = bary_coords.size();
+		int flag = 0;
+		for (size_t j = 0; j < bary_coords_size; ++j) {
+			if (bary_coords[j] <= 0.0) {
+				flag = 1;
+			}
+		}
+		if (flag == 0) {
+			#ifdef MULTICORE
+				#pragma omp critical
+			#endif
+			simplex = simplices[complex_dimension][vertex_simplices[i]];
+			
+			// return SUCCESS;
+		}
+	}
+
+	return SUCCESS;
+}
+
+
+double get_analytical_soln(VectorD &vec) {
+
+	void* handle = dlopen("function.so", RTLD_GLOBAL);
+	if (!handle) {
+		system("g++ ./function.cc -o ./function.so -shared -fPIC");
+		handle = dlopen("function.so", RTLD_GLOBAL);
+		if (!handle) {
+	        std::cerr << "Cannot open file: " << dlerror() << '\n';
+	        return FAILURE;
+	    }
+    }
+
+    dlerror();
+    function_t function = (function_t) dlsym(handle, "function");
+    const char *dlsym_error = dlerror();
+    if (dlsym_error) {
+        std::cerr << "Cannot load symbol 'function': " << dlsym_error << '\n';
+        dlclose(handle);
+        return FAILURE;
+    }
+
+    double output = function(vec);
+    return output;
+}
+
+
+int read_quadratures(Vector2D &nodes,
+					 VectorD &weights,
+			  		 std::string data,
+			  		 size_t dim) {
+
+	std::ifstream f1(data);
+	std::string l;
+	getline(f1, l);
+	std::istringstream iss1(l);
+	double num;
+	iss1 >> num;
+
+	std::fstream file;
+	VectorD row_vector1(dim);
+	int row = 0;
+
+	file.open(data, std::ios::in);
+	if (file.is_open()) {
+		while (file.good()) {
+			std::string line;
+			getline(file, line);
+			
+			if (row < num) {
+				if (not line.empty()) {
+					std::istringstream iss(line);
+					nodes.push_back(row_vector1);
+					
+					for (int col = 0; col < dim; ++col) {
+						double n;
+						iss >> n;
+						nodes[row][col] = n;
+					}
+
+					row += 1;
+				}
+			}
+			else {
+				if (not line.empty()) {
+					std::istringstream iss(line);
+					double n;
+					iss >> n;
+					weights.push_back(n);
+				}
+			}
+		}
+	}    
+	else
+		throw "[INPUT ERROR] Unable to open file.";
+    
+	file.close();
+
+}
+
+
+int error_0(double &error,
+			VectorD &U,
+			int q_order,
+			Vector3I &simplices,
+			Vector2D &vertices,
+			VectorI &num_simplices) {
+
+	size_t N = num_simplices.size();
+	double E = 0;
+	double e = 0;
+	size_t embed_dim = vertices[0].size();
+
+	Vector2D nodes;
+	VectorD weights;
+	std::string data = "data/quadrature/d" + std::to_string(embed_dim) + "o" + std::to_string(q_order) + ".txt";
+	read_quadratures(nodes,
+					 weights, 
+					 data,
+					 embed_dim);
+	size_t nodes_size = nodes.size();
+
+	for(size_t i = 0; i < num_simplices[N-1]; ++i) {
+		e = 0.0;
+		double interpolated_U = 0.0;
+
+		for(size_t j = 0; j < nodes_size; ++j) {
+			VectorD vec(embed_dim, 0.0);
+			for(size_t k = 0; k < embed_dim; ++k) {
+				interpolated_U += U[simplices[N-1][i][k]] * nodes[j][k];
+				for(size_t l = 0; l < embed_dim; ++l) {
+					vec[l] += vertices[simplices[N-1][i][k]][l] * nodes[j][k];
+				}
+			}
+			e += weights[j] * pow(interpolated_U - get_analytical_soln(vec), 2);
+		}
+		double vol;
+		Vector2D pts;
+		size_t complex_dimension = simplices[N-1][i].size();
+		for(size_t j = 0; j < complex_dimension; ++j) {
+			pts.push_back(vertices[simplices[N-1][i][j]]);
+		}
+		unsigned_volume(pts, vol);
+		E += sqrt(abs(vol)*e);
+	}
+
+	error = E;
+
+	return SUCCESS;
+}
 
 
 int print_vector(Vector2D &vec) {
-    for (int i = 0; i < vec.size(); ++i) {
-        for (int j = 0; j < vec[i].size(); ++j) 
+	size_t vec_size = vec.size();
+    for (size_t i = 0; i < vec_size; ++i) {
+    	size_t vec_i_size = vec[i].size();
+        for (size_t j = 0; j < vec_i_size; ++j) 
             std::cout << vec[i][j] << " ";
 
         std::cout << std::endl << std::flush;

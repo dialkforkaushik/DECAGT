@@ -44,6 +44,28 @@ int get_circumcenter(VectorD &center,
 				     double &radius,
 				     Vector2D &pts);
 
+int k_cochain_norm(VectorD U,
+				   std::string weight,
+				   VectorSpmatD hodge_stars,
+				   int k);
+
+int get_closest_simplex_to_point(VectorD &point,
+							 VectorI &simplex,
+							 Vector2D &vertices,
+							 Vector3I &simplices,
+							 VectorMap3I &adjacency1d,
+							 size_t embedding_dimension,
+							 size_t complex_dimension);
+
+double get_analytical_soln(VectorD &vec);
+
+int error_0(double &error,
+			VectorD &U,
+			int q_order,
+			Vector3I &simplices,
+			Vector2D &vertices,
+			VectorI &num_simplices);
+
 int print_vector(Vector2D &vec);
 
 int print_vector(Vector2I &vec);
