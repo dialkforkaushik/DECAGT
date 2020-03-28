@@ -59,8 +59,9 @@ int get_closest_simplex_to_point(VectorD &point,
 
 double get_analytical_soln(VectorD &vec);
 
-int error_0(double &error,
-			VectorD &U,
+double get_simplex_volume(Vector2D &vertices);
+
+double error_0(VectorD &U,
 			int q_order,
 			Vector3I &simplices,
 			Vector2D &vertices,

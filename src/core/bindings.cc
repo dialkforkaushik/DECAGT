@@ -71,6 +71,7 @@ PYBIND11_MODULE(decagt, m) {
         .def_readonly("hodge_stars", &DiscreteExteriorCalculus::hodge_stars);
 
     m.def("get_analytical_soln", &get_analytical_soln);
-    m.def("error_0", &error_0);
+    m.def("error_0", &error_0, py::call_guard<py::gil_scoped_release>());
+    m.def("get_simplex_volume", &get_simplex_volume);
 
 }

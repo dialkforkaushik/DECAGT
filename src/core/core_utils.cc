@@ -37,6 +37,47 @@ int factorial(int &n) {
     return SUCCESS;
 }
 
+int l2_norm(double norm,
+			VectorD v) {
+
+	norm = 0.0;
+	size_t size = v.size();
+	for(size_t i = 0; i < size; ++i) {
+		norm += v[i]*v[i];
+	}
+	norm = sqrt(norm);
+
+	return SUCCESS;
+}
+
+
+double get_simplex_volume(Vector2D &vertices) {
+
+	size_t complex_dimension = vertices.size() - 1;
+	size_t embed_dim = vertices[0].size();
+
+	DenMatD B = DenMatD::Ones(complex_dimension + 2, complex_dimension + 2);
+	for (size_t i = 0; i < complex_dimension + 1; ++i) {
+		for (size_t j = 0; j < complex_dimension + 1; ++j) {
+			EigVectorD v(embed_dim);
+			for (size_t k = 0; k < embed_dim; ++k) {
+				v.coeffRef(k) = vertices[i][k] - vertices[j][k];
+			}
+			B.coeffRef(i+1, j+1) = pow(v.norm(), 2);
+		}	
+	}
+	B.coeffRef(0, 0) = 0.0;
+
+	int fac = complex_dimension;
+	factorial(fac);
+
+	double num = pow(-1, complex_dimension + 1) * B.determinant();
+	double den = pow(2, complex_dimension) * pow(fac, 2);
+	double vol = sqrt(num/den);
+
+	return vol;
+}
+
 
 int unsigned_volume(Vector2D &pts,
 					double &vol) {
@@ -549,10 +590,10 @@ int get_closest_simplex_to_point(VectorD &point,
 
 double get_analytical_soln(VectorD &vec) {
 
-	void* handle = dlopen("function.so", RTLD_GLOBAL);
+	void* handle = dlopen("./function.so", RTLD_LAZY);
 	if (!handle) {
 		system("g++ ./function.cc -o ./function.so -shared -fPIC");
-		handle = dlopen("function.so", RTLD_GLOBAL);
+		handle = dlopen("./function.so", RTLD_LAZY);
 		if (!handle) {
 	        std::cerr << "Cannot open file: " << dlerror() << '\n';
 	        return FAILURE;
@@ -575,32 +616,34 @@ double get_analytical_soln(VectorD &vec) {
 
 int read_quadratures(Vector2D &nodes,
 					 VectorD &weights,
-			  		 std::string data,
-			  		 size_t dim) {
+			  		 std::string data) {
 
 	std::ifstream f1(data);
 	std::string l;
 	getline(f1, l);
 	std::istringstream iss1(l);
-	double num;
+	int num;
 	iss1 >> num;
 
 	std::fstream file;
-	VectorD row_vector1(dim);
 	int row = 0;
+	int cols;
 
 	file.open(data, std::ios::in);
 	if (file.is_open()) {
+		getline(file, l);
 		while (file.good()) {
 			std::string line;
 			getline(file, line);
+			count_columns(line, cols);
+			VectorD row_vector1(cols);
 			
 			if (row < num) {
 				if (not line.empty()) {
 					std::istringstream iss(line);
 					nodes.push_back(row_vector1);
 					
-					for (int col = 0; col < dim; ++col) {
+					for (int col = 0; col < cols; ++col) {
 						double n;
 						iss >> n;
 						nodes[row][col] = n;
@@ -624,37 +667,40 @@ int read_quadratures(Vector2D &nodes,
     
 	file.close();
 
+	return SUCCESS;
+
 }
 
 
-int error_0(double &error,
-			VectorD &U,
-			int q_order,
-			Vector3I &simplices,
-			Vector2D &vertices,
-			VectorI &num_simplices) {
+double error_0(VectorD &U,
+				int q_order,
+				Vector3I &simplices,
+				Vector2D &vertices,
+				VectorI &num_simplices) {
 
 	size_t N = num_simplices.size();
-	double E = 0;
-	double e = 0;
+	double E = 0.0;
 	size_t embed_dim = vertices[0].size();
 
 	Vector2D nodes;
 	VectorD weights;
-	std::string data = "data/quadrature/d" + std::to_string(embed_dim) + "o" + std::to_string(q_order) + ".txt";
+	std::string data = "./data/quadrature/d" + std::to_string(N-1) + "o" + std::to_string(q_order) + ".txt";
 	read_quadratures(nodes,
-					 weights, 
-					 data,
-					 embed_dim);
+					 weights,
+					 data);
 	size_t nodes_size = nodes.size();
 
+	#ifdef MULTICORE
+		#pragma omp parallel for
+	#endif
 	for(size_t i = 0; i < num_simplices[N-1]; ++i) {
-		e = 0.0;
-		double interpolated_U = 0.0;
+		double e = 0;
+		double interpolated_U;
 
 		for(size_t j = 0; j < nodes_size; ++j) {
 			VectorD vec(embed_dim, 0.0);
-			for(size_t k = 0; k < embed_dim; ++k) {
+			interpolated_U = 0.0;
+			for(size_t k = 0; k < N; ++k) {
 				interpolated_U += U[simplices[N-1][i][k]] * nodes[j][k];
 				for(size_t l = 0; l < embed_dim; ++l) {
 					vec[l] += vertices[simplices[N-1][i][k]][l] * nodes[j][k];
@@ -662,19 +708,20 @@ int error_0(double &error,
 			}
 			e += weights[j] * pow(interpolated_U - get_analytical_soln(vec), 2);
 		}
-		double vol;
+
+		
 		Vector2D pts;
-		size_t complex_dimension = simplices[N-1][i].size();
-		for(size_t j = 0; j < complex_dimension; ++j) {
+		for(size_t j = 0; j < N; ++j) {
 			pts.push_back(vertices[simplices[N-1][i][j]]);
 		}
-		unsigned_volume(pts, vol);
-		E += sqrt(abs(vol)*e);
+		double vol = get_simplex_volume(pts);
+		#ifdef MULTICORE
+			#pragma omp critical
+		#endif
+		E += sqrt(vol*e);
 	}
 
-	error = E;
-
-	return SUCCESS;
+	return E;
 }
 
 

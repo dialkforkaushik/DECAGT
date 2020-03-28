@@ -10,6 +10,7 @@
 #include <sstream>
 #include <Eigen/Eigen>
 #include <set>
+#include <stdlib.h>
 
 #ifdef PYTHON
 	#include <pybind11/pybind11.h>
