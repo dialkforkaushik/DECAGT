@@ -1,16 +1,17 @@
-cmake_minimum_required(VERSION 2.0)
+cmake_minimum_required(VERSION 2.8)
 
 project(decagt)
 
-IF(NOT DEFINED MULTICORE OR MULTICORE)
+option(MULTICORE "use multicore" ON)
+IF(MULTICORE)
     ADD_DEFINITIONS(-DMULTICORE)
+    message(${MULTICORE})
 ENDIF(MULTICORE)
-UNSET(MULTICORE CACHE)
 
 SET(PYTHON true)
 ADD_DEFINITIONS(-DPYTHON)
 
-SET(CMAKE_CXX_FLAGS "-std=c++11 -O3 -fopenmp")
+SET(CMAKE_EXE_LINKER_FLAGS "-std=c++11 -fopenmp")
 
 # Set source directory
 SET(SOURCE_DIR "src/core")

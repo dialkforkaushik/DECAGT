@@ -1,12 +1,14 @@
-# Solve the resonant cavity problem with Whitney forms.
+"""
+Solve the resonant cavity problem with Whitney forms.
 
-# References:
-#     Douglas N. Arnold and Richard S. Falk and Ragnar Winther
-#    "Finite element exterior calculus: from Hodge theory to numerical
-#    stability"
-#    Bull. Amer. Math. Soc. (N.S.), vol. 47, No. 2, pp. 281--354
-#    DOI : 10.1090/S0273-0979-10-01278-4
+References:
+    Douglas N. Arnold and Richard S. Falk and Ragnar Winther
+    "Finite element exterior calculus: from Hodge theory to numerical
+    stability"
+    Bull. Amer. Math. Soc. (N.S.), vol. 47, No. 2, pp. 281--354
+    DOI : 10.1090/S0273-0979-10-01278-4
 
+"""
 from decagt import SimplicialComplex, FiniteElementExteriorCalculus
 from numpy import loadtxt
 from scipy import real, zeros
