@@ -752,7 +752,7 @@ double quadratic_error_0(VectorD &U,
 
 		for(size_t j = 0; j < nodes_size; ++j) {
 			VectorD vec1(embed_dim, 0.0); // stores location of quadrature node
-			VectorD vec2(embed_dim, 0.0);
+			VectorD mid_point(embed_dim, 0.0); // stores mid-point of the edges
 			interpolated_U = 0.0;
 			for(size_t k = 0; k < N; ++k) {
 				interpolated_U += U[simplices[N-1][i][k]] * pow(nodes[j][k], 2);
@@ -795,11 +795,11 @@ double quadratic_error_0(VectorD &U,
 			size_t num_edges = edges.size();
 			for(size_t k = 0; k < num_edges; ++k) {
 				for(size_t l = 0; l < embed_dim; ++l) {
-					vec2[l] = (vertices[edges[k][0]][l] + vertices[edges[k][1]][l]) / 2;
+					mid_point[l] = (vertices[edges[k][0]][l] + vertices[edges[k][1]][l]) / 2;
 				}
 				// print_vector(vec2);
 				// std::cout<<nodes[j][local_edges[k][0]]<<"\t"<<nodes[j][local_edges[k][1]]<<"\n";
-				interpolated_U += 4 * get_analytical_soln(vec2) * nodes[j][local_edges[k][0]] * nodes[j][local_edges[k][1]];
+				interpolated_U += 4 * get_analytical_soln(mid_point) * nodes[j][local_edges[k][0]] * nodes[j][local_edges[k][1]];
 			}
 			e += weights[j] * pow(interpolated_U - get_analytical_soln(vec1), 2);
 			
