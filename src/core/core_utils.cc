@@ -725,6 +725,102 @@ double error_0(VectorD &U,
 }
 
 
+double quadratic_error_0(VectorD &U,
+						int q_order,
+						Vector3I &simplices,
+						Vector2D &vertices,
+						VectorI &num_simplices) {
+
+	size_t N = num_simplices.size();
+	double E = 0.0;
+	size_t embed_dim = vertices[0].size();
+
+	Vector2D nodes;
+	VectorD weights;
+	std::string data = "./data/quadrature/d" + std::to_string(N-1) + "o" + std::to_string(q_order) + ".txt";
+	read_quadratures(nodes,
+					 weights,
+					 data);
+	size_t nodes_size = nodes.size();
+
+	#ifdef MULTICORE
+		#pragma omp parallel for
+	#endif
+	for(size_t i = 0; i < num_simplices[N-1]; ++i) {
+		double e = 0;
+		double interpolated_U;
+
+		for(size_t j = 0; j < nodes_size; ++j) {
+			VectorD vec1(embed_dim, 0.0); // stores location of quadrature node
+			VectorD vec2(embed_dim, 0.0);
+			interpolated_U = 0.0;
+			for(size_t k = 0; k < N; ++k) {
+				interpolated_U += U[simplices[N-1][i][k]] * pow(nodes[j][k], 2);
+				for(size_t l = 0; l < embed_dim; ++l) {
+					vec1[l] += vertices[simplices[N-1][i][k]][l] * nodes[j][k];
+				}
+			}
+			Vector2I edges;
+			Vector2I local_edges;
+
+			VectorI local_indices;
+			for (size_t k = 0; k < N; ++k) {
+				local_indices.push_back(k);
+			}
+			get_combinations_simplex(local_indices,
+									 local_edges,
+									 2);
+			
+			for (size_t k = 0; k < local_edges.size(); ++k) {
+				VectorI temp1;
+				for (int l = 0; l < 2; ++l){
+					temp1.push_back(simplices[N-1][i][local_edges[k][l]]);
+				}
+				edges.push_back(temp1);
+			}
+			
+			// print_vector(simplices[N-1][i]);
+			// print_vector(edges);
+			// print_vector(local_edges);
+			// exit(0);
+			// std::cout<<"nodes\n";
+			// print_vector(nodes);
+			// std::cout<<"vertices\n";
+			// print_vector(vertices[simplices[N-1][i][0]]);
+			// print_vector(vertices[simplices[N-1][i][1]]);
+			// print_vector(vertices[simplices[N-1][i][2]]);
+			// std::cout<<"vec1\n";
+			// print_vector(vec1);
+
+			size_t num_edges = edges.size();
+			for(size_t k = 0; k < num_edges; ++k) {
+				for(size_t l = 0; l < embed_dim; ++l) {
+					vec2[l] = (vertices[edges[k][0]][l] + vertices[edges[k][1]][l]) / 2;
+				}
+				// print_vector(vec2);
+				// std::cout<<nodes[j][local_edges[k][0]]<<"\t"<<nodes[j][local_edges[k][1]]<<"\n";
+				interpolated_U += 4 * get_analytical_soln(vec2) * nodes[j][local_edges[k][0]] * nodes[j][local_edges[k][1]];
+			}
+			e += weights[j] * pow(interpolated_U - get_analytical_soln(vec1), 2);
+			
+			// if (i == 2)
+			// 	exit(0);
+		}
+
+		Vector2D pts;
+		for(size_t j = 0; j < N; ++j) {
+			pts.push_back(vertices[simplices[N-1][i][j]]);
+		}
+		double vol = get_simplex_volume(pts);
+		#ifdef MULTICORE
+			#pragma omp critical
+		#endif
+		E += sqrt(vol*e);
+	}
+
+	return E;
+}
+
 int print_vector(Vector2D &vec) {
 	size_t vec_size = vec.size();
     for (size_t i = 0; i < vec_size; ++i) {

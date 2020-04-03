@@ -4,7 +4,7 @@ import time
 import matplotlib.pyplot as plt
 
 y = []
-x = [1.0, 0.5, 0.25, 0.125] #max edge length for 3d cube meshes (hardcoded)
+x = [1.0, 0.5, 0.25, 0.125] #max edge length for 3d cube meshes (hardcoded for faster computation)
 q_order = 2
 for j in range(4):
 	U = []
@@ -30,7 +30,7 @@ for j in range(4):
 		U.append(decagt.get_analytical_soln(sc.vertices[i]))
 	
 	error = 0.0
-	error = decagt.error_0(U,q_order,sc.simplices,sc.vertices,sc.num_simplices)
+	error = decagt.quadratic_error_0(U,q_order,sc.simplices,sc.vertices,sc.num_simplices)
 	y.append(error)
 
 	print("For mesh " + str(j+1))

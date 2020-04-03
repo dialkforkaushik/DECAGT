@@ -67,6 +67,12 @@ double error_0(VectorD &U,
 			Vector2D &vertices,
 			VectorI &num_simplices);
 
+double quadratic_error_0(VectorD &U,
+			int q_order,
+			Vector3I &simplices,
+			Vector2D &vertices,
+			VectorI &num_simplices);
+
 int print_vector(Vector2D &vec);
 
 int print_vector(Vector2I &vec);

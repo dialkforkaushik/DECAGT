@@ -5,16 +5,16 @@
 #define _USE_MATH_DEFINES
 
 extern "C" double function(std::vector < double > f) {
-	double x = 0.0;
+	double out = 0.0;
 	for(int i = 0; i < f.size(); ++i) {
-		// x += sin(f[i]*M_PI);
-		// x += f[i]*f[i];
-		x += (i+1)*f[i];
+		// out += sin(f[i]*M_PI);
+		out += f[i]*f[i];
+		// out += (i+1)*f[i];
 	}
 
-	// x += exp(-1 * (pow(f[0] - 0.5, 2) * pow(f[1] - 0.5, 2) * pow(f[2] - 0.5, 2)));
-	x = f[0]*f[1];
-	// x = sqrt(x);
+	// out += exp(-1 * (pow(f[0] - 0.5, 2) * pow(f[1] - 0.5, 2) * pow(f[2] - 0.5, 2)));
+	// out = f[0]*f[1];
+	// out = sqrt(out);
 
-	return x;
+	return out;
 }

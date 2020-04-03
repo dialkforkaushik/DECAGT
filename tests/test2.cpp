@@ -14,7 +14,7 @@ int main (int argc, char const *argv[]) {
 		U.push_back(get_analytical_soln(sc.vertices[i]));
 	}
 
-	error = error_0(U,
+	error = quadratic_error_0(U,
 			2,
 			sc.simplices,
 			sc.vertices,
