@@ -4,8 +4,9 @@ import time
 import matplotlib.pyplot as plt
 
 y = []
+# x = []
 x = [1.0, 0.5, 0.25, 0.125] #max edge length for 3d cube meshes (hardcoded for faster computation)
-q_order = 2
+q_order = 3
 for j in range(4):
 	U = []
 	vertices = np.loadtxt('tests/meshes/3d/cube_hierarchy/vertices' + str(j)+'.txt')
@@ -16,7 +17,6 @@ for j in range(4):
 
 	####################### Code to find max edge length #################################
 	# pts = []
-	# x = []
 	# max_vol = -1
 	# for i in sc.simplices[1]:
 	# 	a = np.array(sc.vertices[i[0]]) - np.array(sc.vertices[i[1]])
