@@ -10,6 +10,7 @@ extern "C" double function(std::vector < double > f) {
 		out += sin(f[i]*M_PI);
 		// out += f[i]*f[i];
 		// out += f[i];
+		// out += f[i]*f[i]*f[i];
 	}
 
 	// out += exp(-1 * (pow(f[0] - 0.5, 2) * pow(f[1] - 0.5, 2) * pow(f[2] - 0.5, 2)));

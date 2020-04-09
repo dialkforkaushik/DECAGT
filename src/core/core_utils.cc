@@ -755,7 +755,7 @@ double quadratic_error_0(VectorD &U,
 			VectorD mid_point(embed_dim, 0.0); // stores mid-point of the edges
 			interpolated_U = 0.0;
 			for(size_t k = 0; k < N; ++k) {
-				interpolated_U += U[simplices[N-1][i][k]] * pow(nodes[j][k], 2);
+				interpolated_U += U[simplices[N-1][i][k]] * nodes[j][k] * (2 * nodes[j][k] - 1);
 				for(size_t l = 0; l < embed_dim; ++l) {
 					vec1[l] += vertices[simplices[N-1][i][k]][l] * nodes[j][k];
 				}
@@ -778,32 +778,15 @@ double quadratic_error_0(VectorD &U,
 				}
 				edges.push_back(temp1);
 			}
-			
-			// print_vector(nodes[j]);
-			// print_vector(simplices[N-1][i]);
-			// print_vector(edges);
-			// print_vector(local_edges);
-			// if(i == 2)
-			// 	exit(0);
-			// std::cout<<"nodes\n";
-			// std::cout<<"vertices\n";
-			// print_vector(vertices[simplices[N-1][i][0]]);
-			// print_vector(vertices[simplices[N-1][i][1]]);
-			// print_vector(vertices[simplices[N-1][i][2]]);
-			// std::cout<<"vec1\n";
-			// print_vector(vec1);
 
 			size_t num_edges = edges.size();
 			for(size_t k = 0; k < num_edges; ++k) {
 				for(size_t l = 0; l < embed_dim; ++l) {
 					mid_point[l] = (vertices[edges[k][0]][l] + vertices[edges[k][1]][l]) / 2;
 				}
-				// print_vector(mid_point);
-				// std::cout<<nodes[j][local_edges[k][0]]<<"\t"<<nodes[j][local_edges[k][1]]<<"\n";
-				interpolated_U += (4 * get_analytical_soln(mid_point) - U[edges[k][0]] - U[edges[k][1]]) * nodes[j][local_edges[k][0]] * nodes[j][local_edges[k][1]];
+				interpolated_U += (4 * get_analytical_soln(mid_point)) * nodes[j][local_edges[k][0]] * nodes[j][local_edges[k][1]];
 			}
 			e += weights[j] * pow(interpolated_U - get_analytical_soln(vec1), 2);
-			// std::cout<<"\n";
 		}
 
 		Vector2D pts;

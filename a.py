@@ -38,8 +38,18 @@ for j in range(4):
 	print("max edge len: " + str(x[j]))
 	print("")
 
+x = np.array(x)
+y = np.array(y)
+
+fig = plt.figure()
 plt.loglog(x,y)
 plt.ylabel("error")
 plt.xlabel("Max Edge length")
 plt.title("q_order = " + str(q_order))
-plt.show()
+fig.savefig('fig.png')
+
+slope_ary = []
+for i in range(1, y.shape[0]):
+	slope, intercept = np.polyfit(np.log(np.sort(x[i-1:i+1])), np.log(np.sort(y[i-1:i+1])), 1)
+	slope_ary.append(slope)
+print("slope: ", slope_ary)
