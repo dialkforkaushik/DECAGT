@@ -30,7 +30,7 @@ for j in range(4):
 		U.append(decagt.get_analytical_soln(sc.vertices[i]))
 	
 	error = 0.0
-	error = decagt.quadratic_error_0(U,q_order,sc.simplices,sc.vertices,sc.num_simplices)
+	error = decagt.quadratic_error_0_bb_mass(U,q_order,sc.simplices,sc.vertices,sc.num_simplices)
 	y.append(error)
 
 	print("For mesh " + str(j+1))

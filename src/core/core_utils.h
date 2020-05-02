@@ -5,6 +5,10 @@
 
 int factorial (int &n);
 
+int binomialCoeff(int &nCk,
+				  int n,
+				  int k); 
+
 int count_columns(std::string &line,
 				  int &columns);
 
@@ -61,17 +65,34 @@ double get_analytical_soln(VectorD &vec);
 
 double get_simplex_volume(Vector2D &vertices);
 
+int get_index_sets(Vector2I &sets,
+				   int sum,
+				   int dim,
+				   int d = 3);
+
 double error_0(VectorD &U,
-			int q_order,
-			Vector3I &simplices,
-			Vector2D &vertices,
-			VectorI &num_simplices);
+				int q_order,
+				Vector3I &simplices,
+				Vector2D &vertices,
+				VectorI &num_simplices);
 
 double quadratic_error_0(VectorD &U,
-			int q_order,
-			Vector3I &simplices,
-			Vector2D &vertices,
-			VectorI &num_simplices);
+						int q_order,
+						Vector3I &simplices,
+						Vector2D &vertices,
+						VectorI &num_simplices);
+
+double quadratic_error_0_bb(VectorD &U,
+							int q_order,
+							Vector3I &simplices,
+							Vector2D &vertices,
+							VectorI &num_simplices);
+
+double quadratic_error_0_bb_mass(VectorD &U,
+								int q_order,
+								Vector3I &simplices,
+								Vector2D &vertices,
+								VectorI &num_simplices);
 
 int print_vector(Vector2D &vec);
 

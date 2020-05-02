@@ -15,6 +15,7 @@
 #include <cmath>
 #include <limits>
 #include <iomanip>
+#include <numeric>
 
 #ifdef PYTHON
 	#include <pybind11/pybind11.h>
@@ -468,6 +469,68 @@ int FiniteElementExteriorCalculus::compute_hodge_stars() {
 	return SUCCESS;
 }
 
+
+int FiniteElementExteriorCalculus::mass_matrix_bb_0(DenMatD &mass_matrix,
+													int n,
+													int m,
+													int d) {
+
+	int max = std::max(n, m);
+
+	if (max < 1) {
+		return FAILURE;
+	}
+
+	Vector2I index_sets;
+	Vector2I temp_index_sets;
+	get_index_sets(index_sets,
+					1,
+					1,
+					d);
+	for (int i = 2; i <= std::min(max, d+1); ++i) {
+		temp_index_sets.clear();
+		get_index_sets(temp_index_sets,
+					   max,
+					   i,
+					   d);
+		index_sets.insert(index_sets.end(), temp_index_sets.begin(), temp_index_sets.end());
+	}
+
+	size_t size = index_sets.size();
+	mass_matrix.resize(size, size);
+
+	for (size_t i = 0; i < size; ++i) {
+		for (int j = 0; j < size; ++j) {
+
+			int nCk_1;
+			int nCk_2;
+			int s1 = std::accumulate(index_sets[i].begin(), index_sets[i].end(), 0);
+			int s2 = std::accumulate(index_sets[j].begin(), index_sets[j].end(), 0);
+			binomialCoeff(nCk_1,
+						  s1 + s2,
+						  s2);
+			binomialCoeff(nCk_2,
+						  s1 + s2 + 3,
+						  3);
+
+			double den = nCk_1 * nCk_2;
+			double num = 1.0;
+
+			for (int k = 0; k < d + 1; ++k) {
+				int nCk;
+				binomialCoeff(nCk,
+							  index_sets[i][k] + index_sets[j][k],
+							  index_sets[i][k]);
+				num *= nCk;
+			}
+
+			mass_matrix.coeffRef(i, j) = num/den;
+		}
+	}
+
+	return SUCCESS;
+	
+}
 
 FiniteElementExteriorCalculus::FiniteElementExteriorCalculus() {
 

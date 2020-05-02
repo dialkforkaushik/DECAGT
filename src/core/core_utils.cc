@@ -37,6 +37,27 @@ int factorial(int &n) {
     return SUCCESS;
 }
 
+
+int binomialCoeff(int &nCk,
+				  int n,
+				  int k) {  
+	
+    int res = 1;  
+  
+    if ( k > n - k )  
+        k = n - k;  
+  
+    for (int i = 0; i < k; ++i)  {  
+        res *= (n - i);  
+        res /= (i + 1);  
+    }  
+  
+    nCk = res;
+
+    return SUCCESS; 
+}
+
+
 int l2_norm(double norm,
 			VectorD v) {
 
@@ -672,6 +693,65 @@ int read_quadratures(Vector2D &nodes,
 }
 
 
+int get_index_sets(Vector2I &sets,
+				   int sum,
+				   int dim,
+				   int d) {
+
+  
+    VectorI p(d+1); // An array to store a partition 
+    int k = 0;  // Index of last element in a partition 
+    p[k] = sum;  // Initialize first partition as number itself 
+  
+  	Vector2I temp_sets;
+    // This loop first prints current partition then generates next 
+    // partition. The loop stops when the current partition has all 1s 
+    while (true) { 
+        // std::cout<<k+1<<"\n";
+        if (k + 1 == dim) {
+        	temp_sets.push_back(p);
+        }
+  
+        int rem_val = 0; 
+        while (k >= 0 && p[k] == 1) { 
+            rem_val += p[k]; 
+            k--; 
+        } 
+  
+        if (k < 0) {
+        	break;
+        }
+  
+        p[k]--; 
+        rem_val++; 
+  
+        while (rem_val > p[k]) { 
+            p[k+1] = p[k]; 
+            rem_val = rem_val - p[k]; 
+            k++; 
+        } 
+  
+        p[k+1] = rem_val; 
+        k++; 
+    }
+
+    size_t temp_sets_size = temp_sets.size();
+    for (int i = 0; i < temp_sets_size; ++i) {
+    	VectorI v = temp_sets[i];
+    	sort(v.begin(),v.end());
+    	do {
+			for(int y : v) {
+				sets.push_back(v);
+			}
+		} while (std::next_permutation(v.begin(), v.end()));
+    }
+
+    sets.erase(std::unique(sets.begin(), sets.end()), sets.end());
+
+    return SUCCESS;
+}
+
+
 double error_0(VectorD &U,
 				int q_order,
 				Vector3I &simplices,
@@ -696,6 +776,7 @@ double error_0(VectorD &U,
 	for(size_t i = 0; i < num_simplices[N-1]; ++i) {
 		double e = 0;
 		double interpolated_U;
+		double sum_weights = 0;
 
 		for(size_t j = 0; j < nodes_size; ++j) {
 			VectorD vec(embed_dim, 0.0);
@@ -707,6 +788,7 @@ double error_0(VectorD &U,
 				}
 			}
 			e += weights[j] * pow(interpolated_U - get_analytical_soln(vec), 2);
+			sum_weights += weights[j];
 		}
 
 		
@@ -718,7 +800,7 @@ double error_0(VectorD &U,
 		#ifdef MULTICORE
 			#pragma omp critical
 		#endif
-		E += sqrt(vol*e);
+		E += sqrt(vol*e/sum_weights);
 	}
 
 	return E;
@@ -749,6 +831,7 @@ double quadratic_error_0(VectorD &U,
 	for(size_t i = 0; i < num_simplices[N-1]; ++i) {
 		double e = 0;
 		double interpolated_U;
+		double sum_weights = 0;
 
 		for(size_t j = 0; j < nodes_size; ++j) {
 			VectorD vec1(embed_dim, 0.0); // stores location of quadrature node
@@ -787,6 +870,7 @@ double quadratic_error_0(VectorD &U,
 				interpolated_U += (4 * get_analytical_soln(mid_point)) * nodes[j][local_edges[k][0]] * nodes[j][local_edges[k][1]];
 			}
 			e += weights[j] * pow(interpolated_U - get_analytical_soln(vec1), 2);
+			sum_weights += weights[j];
 		}
 
 		Vector2D pts;
@@ -797,7 +881,188 @@ double quadratic_error_0(VectorD &U,
 		#ifdef MULTICORE
 			#pragma omp critical
 		#endif
-		E += sqrt(vol*e);
+		E += sqrt(vol*e/sum_weights);
+	}
+
+	return E;
+}
+
+
+double quadratic_error_0_bb(VectorD &U,
+							int q_order,
+							Vector3I &simplices,
+							Vector2D &vertices,
+							VectorI &num_simplices) {
+
+	size_t N = num_simplices.size();
+	double E = 0.0;
+	size_t embed_dim = vertices[0].size();
+
+	Vector2D nodes;
+	VectorD weights;
+	std::string data = "./data/quadrature/d" + std::to_string(N-1) + "o" + std::to_string(q_order) + ".txt";
+	read_quadratures(nodes,
+					 weights,
+					 data);
+	size_t nodes_size = nodes.size();
+
+	#ifdef MULTICORE
+		#pragma omp parallel for
+	#endif
+	for(size_t i = 0; i < num_simplices[N-1]; ++i) {
+		double e = 0;
+		double interpolated_U;
+		double sum_weights = 0;
+
+		Vector2I edges;
+		Vector2I local_edges;
+
+		VectorI local_indices;
+		for (size_t k = 0; k < N; ++k) {
+			local_indices.push_back(k);
+		}
+		get_combinations_simplex(local_indices,
+								 local_edges,
+								 2);
+		
+		for (size_t k = 0; k < local_edges.size(); ++k) {
+			VectorI temp1;
+			for (int l = 0; l < 2; ++l){
+				temp1.push_back(simplices[N-1][i][local_edges[k][l]]);
+			}
+			edges.push_back(temp1);
+		}
+
+		size_t num_edges = edges.size();
+
+		for(size_t j = 0; j < nodes_size; ++j) {
+			VectorD vec1(embed_dim, 0.0); // stores location of quadrature node
+			VectorD mid_point(embed_dim, 0.0); // stores mid-point of the edges
+			interpolated_U = 0.0;
+			for(size_t k = 0; k < N; ++k) {
+				interpolated_U += U[simplices[N-1][i][k]] * nodes[j][k];
+				for(size_t l = 0; l < embed_dim; ++l) {
+					vec1[l] += vertices[simplices[N-1][i][k]][l] * nodes[j][k];
+				}
+			}
+			
+			for(size_t k = 0; k < num_edges; ++k) {
+				for(size_t l = 0; l < embed_dim; ++l) {
+					mid_point[l] = (vertices[edges[k][0]][l] + vertices[edges[k][1]][l]) / 2;
+				}
+				interpolated_U += (2 * get_analytical_soln(mid_point) - U[edges[k][0]] - U[edges[k][1]]) * 2 * nodes[j][local_edges[k][0]] * nodes[j][local_edges[k][1]];
+			}
+			e += weights[j] * pow(interpolated_U - get_analytical_soln(vec1), 2);
+			sum_weights += weights[j];
+		}
+
+		Vector2D pts;
+		for(size_t j = 0; j < N; ++j) {
+			pts.push_back(vertices[simplices[N-1][i][j]]);
+		}
+		double vol = get_simplex_volume(pts);
+		#ifdef MULTICORE
+			#pragma omp critical
+		#endif
+		E += sqrt(vol*e/sum_weights);
+	}
+
+	return E;
+}
+
+
+double quadratic_error_0_bb_mass(VectorD &U,
+								int q_order,
+								Vector3I &simplices,
+								Vector2D &vertices,
+								VectorI &num_simplices) {
+
+	size_t N = num_simplices.size();
+	double E = 0.0;
+	size_t embed_dim = vertices[0].size();
+
+	Vector2D nodes;
+	VectorD weights;
+	std::string data = "./data/quadrature/d" + std::to_string(N-1) + "o" + std::to_string(q_order) + ".txt";
+	read_quadratures(nodes,
+					 weights,
+					 data);
+	size_t nodes_size = nodes.size();
+
+	VectorD M_uv {1/10, 1/20, 1/60, 1/30, 1/210, 1/105, 2/105};
+	DenMatD M(10, 10);
+	M << M_uv[0], M_uv[1], M_uv[1], M_uv[1], M_uv[3], M_uv[3], M_uv[3], M_uv[2], M_uv[2], M_uv[2],
+		 M_uv[1], M_uv[0], M_uv[1], M_uv[1], M_uv[3], M_uv[2], M_uv[2], M_uv[3], M_uv[3], M_uv[2],
+		 M_uv[1], M_uv[1], M_uv[0], M_uv[1], M_uv[2], M_uv[3], M_uv[2], M_uv[3], M_uv[2], M_uv[3],
+		 M_uv[1], M_uv[1], M_uv[1], M_uv[0], M_uv[2], M_uv[2], M_uv[3], M_uv[2], M_uv[3], M_uv[3],
+		 M_uv[3], M_uv[3], M_uv[2], M_uv[2], M_uv[6], M_uv[5], M_uv[5], M_uv[5], M_uv[5], M_uv[4],
+		 M_uv[3], M_uv[2], M_uv[3], M_uv[2], M_uv[5], M_uv[6], M_uv[5], M_uv[5], M_uv[4], M_uv[5],
+		 M_uv[3], M_uv[2], M_uv[2], M_uv[3], M_uv[5], M_uv[5], M_uv[6], M_uv[4], M_uv[5], M_uv[5],
+		 M_uv[2], M_uv[3], M_uv[3], M_uv[2], M_uv[5], M_uv[5], M_uv[4], M_uv[6], M_uv[5], M_uv[5],
+		 M_uv[2], M_uv[3], M_uv[2], M_uv[3], M_uv[5], M_uv[4], M_uv[5], M_uv[5], M_uv[6], M_uv[5],
+		 M_uv[2], M_uv[2], M_uv[3], M_uv[3], M_uv[4], M_uv[5], M_uv[5], M_uv[5], M_uv[5], M_uv[6];
+		
+
+	#ifdef MULTICORE
+		#pragma omp parallel for
+	#endif
+	for(size_t i = 0; i < num_simplices[N-1]; ++i) {
+		double e = 0;
+		double interpolated_U;
+		double sum_weights = 0;
+
+		Vector2I edges;
+		Vector2I local_edges;
+
+		VectorI local_indices;
+		for (size_t k = 0; k < N; ++k) {
+			local_indices.push_back(k);
+		}
+		get_combinations_simplex(local_indices,
+								 local_edges,
+								 2);
+		
+		for (size_t k = 0; k < local_edges.size(); ++k) {
+			VectorI temp1;
+			for (int l = 0; l < 2; ++l){
+				temp1.push_back(simplices[N-1][i][local_edges[k][l]]);
+			}
+			edges.push_back(temp1);
+		}
+
+		size_t num_edges = edges.size();
+
+		EigVectorD F(N + num_edges);
+
+		for(size_t j = 0; j < nodes_size; ++j) {
+			VectorD vec1(embed_dim, 0.0); // stores location of quadrature node
+			VectorD mid_point(embed_dim, 0.0); // stores mid-point of the edges
+			interpolated_U = 0.0;
+			for(size_t k = 0; k < N; ++k) {
+				interpolated_U += U[simplices[N-1][i][k]] * nodes[j][k];
+				F(k) = U[simplices[N-1][i][k]];
+			}
+			
+			for(size_t k = 0; k < num_edges; ++k) {
+				for(size_t l = 0; l < embed_dim; ++l) {
+					mid_point[l] = (vertices[edges[k][0]][l] + vertices[edges[k][1]][l]) / 2;
+				}
+				interpolated_U += (2 * get_analytical_soln(mid_point) - U[edges[k][0]] - U[edges[k][1]]) * 2 * nodes[j][local_edges[k][0]] * nodes[j][local_edges[k][1]];
+				F(N + k) = (2 * get_analytical_soln(mid_point) - U[edges[k][0]] - U[edges[k][1]]);
+			}
+			e += weights[j] * pow(interpolated_U, 2);
+		}
+
+		Vector2D pts;
+		for(size_t j = 0; j < N; ++j) {
+			pts.push_back(vertices[simplices[N-1][i][j]]);
+		}
+		double vol = get_simplex_volume(pts);
+
+		#ifdef MULTICORE
+			#pragma omp critical
+		#endif
+		E += (vol*e/sum_weights - F.transpose() * vol * M * F);
 	}
 
 	return E;

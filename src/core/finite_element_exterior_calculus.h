@@ -28,6 +28,11 @@ class FiniteElementExteriorCalculus: public GeometryComplex {
     int compute_hodge_star_k(int &k);
 
     int set_hodge_stars_to_null();
+
+    int mass_matrix_bb_0(DenMatD &mass_matrix, 
+    					 int n, 
+    					 int m,
+    					 int d = 3);
     
 };
 

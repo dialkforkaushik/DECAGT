@@ -32,6 +32,7 @@ typedef Eigen::MatrixXi DenMatI;
 typedef Eigen::Map < Eigen::VectorXd > MapEigVectorD;
 typedef Eigen::Map < Eigen::VectorXi > MapEigVectorI;
 typedef Eigen::VectorXd EigVectorD;
+typedef Eigen::VectorXi EigVectorI;
 
 typedef std::tuple < VectorD, double > TupleVD;
 

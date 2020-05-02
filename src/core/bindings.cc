@@ -57,6 +57,7 @@ PYBIND11_MODULE(decagt, m) {
 		.def("compute_hodge_stars", &FiniteElementExteriorCalculus::compute_hodge_stars, py::call_guard<py::gil_scoped_release>())
         .def("compute_hodge_star_k", &FiniteElementExteriorCalculus::compute_hodge_star_k, py::call_guard<py::gil_scoped_release>())
 		.def("set_hodge_stars_to_null", &FiniteElementExteriorCalculus::set_hodge_stars_to_null)
+        .def("mass_matrix_bb_0", &FiniteElementExteriorCalculus::mass_matrix_bb_0)
         .def_readonly("hodge_stars", &FiniteElementExteriorCalculus::hodge_stars)
         .def_readonly("all_hodge_stars", &FiniteElementExteriorCalculus::all_hodge_stars);
 
@@ -73,6 +74,8 @@ PYBIND11_MODULE(decagt, m) {
     m.def("get_analytical_soln", &get_analytical_soln);
     m.def("error_0", &error_0, py::call_guard<py::gil_scoped_release>());
     m.def("quadratic_error_0", &quadratic_error_0, py::call_guard<py::gil_scoped_release>());
+    m.def("quadratic_error_0_bb", &quadratic_error_0_bb, py::call_guard<py::gil_scoped_release>());
+    m.def("quadratic_error_0_bb_mass", &quadratic_error_0_bb, py::call_guard<py::gil_scoped_release>());
     m.def("get_simplex_volume", &get_simplex_volume);
 
 }
