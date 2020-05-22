@@ -19,8 +19,8 @@
 #endif
 
 
-int barycentric_gradients(Vector2D &pts,
-						  DenMatD &X) {
+int GeometryComplex::barycentric_gradients(Vector2D &pts,
+						  				   DenMatD &X) {
 
 	int cols = pts[0].size();
 	int rows = pts.size();

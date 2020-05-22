@@ -34,6 +34,9 @@ public:
   std::tuple<Vector2D, DenMatD> simplex_quivers(VectorD form);
 
   int get_highest_dim_circumcenters();
+
+  int barycentric_gradients(Vector2D &pts,
+                            DenMatD &X);
     
 };
 

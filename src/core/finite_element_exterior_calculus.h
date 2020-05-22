@@ -34,6 +34,29 @@ class FiniteElementExteriorCalculus: public GeometryComplex {
     					 int m,
     					 int d = 3);
     
+    int bb_basis(double &bernstein_poly,
+				 VectorI &alpha,
+				 int n,
+				 VectorD &bary_coords);
+
+    int omega_ij(double &omega,
+				VectorD &bary_coords,
+				VectorD &grad_bary_coords);
+
+    int compute_index_sets_o(Vector2I &sets,
+				   			 int sum,
+				   			 int dim,
+				   			 int d = 3);
+
+    int compute_index_sets_t(Vector2I &sets,
+				   			 int sum,
+				   			 int dim,
+				   			 int d = 3);
+
+    int compute_index_sets_p(Vector2I &sets,
+				   			 int sum,
+				   			 int dim,
+				   			 int d = 3);
 };
 
 #endif

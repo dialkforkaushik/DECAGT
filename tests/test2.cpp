@@ -15,7 +15,7 @@ int main (int argc, char const *argv[]) {
 	}
 
 	error = quadratic_error_0(U,
-			2,
+			1,
 			sc.simplices,
 			sc.vertices,
 			sc.num_simplices);

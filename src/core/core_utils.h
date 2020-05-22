@@ -65,10 +65,8 @@ double get_analytical_soln(VectorD &vec);
 
 double get_simplex_volume(Vector2D &vertices);
 
-int get_index_sets(Vector2I &sets,
-				   int sum,
-				   int dim,
-				   int d = 3);
+int circumcenter_barycentric(DenMatD &pts_matrix,
+							 DenMatD &bary_coords);
 
 double error_0(VectorD &U,
 				int q_order,

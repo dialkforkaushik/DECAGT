@@ -46,6 +46,7 @@ PYBIND11_MODULE(decagt, m) {
         .def("compute_primal_volumes", &GeometryComplex::compute_primal_volumes, py::call_guard<py::gil_scoped_release>())
         .def("compute_primal_volume_k", &GeometryComplex::compute_primal_volume_k)
         .def("compute_primal_volumes", &GeometryComplex::get_highest_dim_circumcenters, py::call_guard<py::gil_scoped_release>())
+        .def("barycentric_gradients", &GeometryComplex::barycentric_gradients)
         .def("simplex_quivers", &GeometryComplex::simplex_quivers)
         .def_readonly("primal_volume", &GeometryComplex::primal_volume)
         .def_readonly("dual_volume", &GeometryComplex::dual_volume);
@@ -58,6 +59,11 @@ PYBIND11_MODULE(decagt, m) {
         .def("compute_hodge_star_k", &FiniteElementExteriorCalculus::compute_hodge_star_k, py::call_guard<py::gil_scoped_release>())
 		.def("set_hodge_stars_to_null", &FiniteElementExteriorCalculus::set_hodge_stars_to_null)
         .def("mass_matrix_bb_0", &FiniteElementExteriorCalculus::mass_matrix_bb_0)
+        .def("bb_basis", &FiniteElementExteriorCalculus::bb_basis)
+        .def("omega_ij", &FiniteElementExteriorCalculus::omega_ij)
+        .def("compute_index_sets_o", &FiniteElementExteriorCalculus::compute_index_sets_o)
+        .def("compute_index_sets_t", &FiniteElementExteriorCalculus::compute_index_sets_t)
+        .def("compute_index_sets_p", &FiniteElementExteriorCalculus::compute_index_sets_p)
         .def_readonly("hodge_stars", &FiniteElementExteriorCalculus::hodge_stars)
         .def_readonly("all_hodge_stars", &FiniteElementExteriorCalculus::all_hodge_stars);
 

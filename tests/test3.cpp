@@ -10,10 +10,11 @@ int main (int argc, char const *argv[]) {
 	sc.build_complex();
 	
 	FiniteElementExteriorCalculus fem(sc);
-	DenMatD mass_matrix;
-	fem.mass_matrix_bb_0(mass_matrix,
-						1,
-						1);
+	fem.compute_index_sets_p(sets,
+							 3,
+							 3);
+	print_vector(sets);
+	std::cout<<sets.size();
 	return 0;
 }
 

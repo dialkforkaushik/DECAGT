@@ -148,7 +148,7 @@ int signed_volume(Vector2D &pts,
     return SUCCESS;
 }
 
-inline DenMatD circumcenter_barycentric(DenMatD &pts_matrix, DenMatD &bary_coords) {
+int circumcenter_barycentric(DenMatD &pts_matrix, DenMatD &bary_coords) {
 	int row = pts_matrix.rows();
 	int col = pts_matrix.cols();
 
@@ -183,7 +183,7 @@ inline DenMatD circumcenter_barycentric(DenMatD &pts_matrix, DenMatD &bary_coord
 	DenMatD x = A.colPivHouseholderQr().solve(b);
 	bary_coords = x.topRows(x.rows() - 1);
 
-	return bary_coords;
+	return SUCCESS;
 }
 
 
@@ -693,65 +693,6 @@ int read_quadratures(Vector2D &nodes,
 }
 
 
-int get_index_sets(Vector2I &sets,
-				   int sum,
-				   int dim,
-				   int d) {
-
-  
-    VectorI p(d+1); // An array to store a partition 
-    int k = 0;  // Index of last element in a partition 
-    p[k] = sum;  // Initialize first partition as number itself 
-  
-  	Vector2I temp_sets;
-    // This loop first prints current partition then generates next 
-    // partition. The loop stops when the current partition has all 1s 
-    while (true) { 
-        // std::cout<<k+1<<"\n";
-        if (k + 1 == dim) {
-        	temp_sets.push_back(p);
-        }
-  
-        int rem_val = 0; 
-        while (k >= 0 && p[k] == 1) { 
-            rem_val += p[k]; 
-            k--; 
-        } 
-  
-        if (k < 0) {
-        	break;
-        }
-  
-        p[k]--; 
-        rem_val++; 
-  
-        while (rem_val > p[k]) { 
-            p[k+1] = p[k]; 
-            rem_val = rem_val - p[k]; 
-            k++; 
-        } 
-  
-        p[k+1] = rem_val; 
-        k++; 
-    }
-
-    size_t temp_sets_size = temp_sets.size();
-    for (int i = 0; i < temp_sets_size; ++i) {
-    	VectorI v = temp_sets[i];
-    	sort(v.begin(),v.end());
-    	do {
-			for(int y : v) {
-				sets.push_back(v);
-			}
-		} while (std::next_permutation(v.begin(), v.end()));
-    }
-
-    sets.erase(std::unique(sets.begin(), sets.end()), sets.end());
-
-    return SUCCESS;
-}
-
-
 double error_0(VectorD &U,
 				int q_order,
 				Vector3I &simplices,
@@ -1148,4 +1089,5 @@ int print_vector(VectorMap3I &vec) {
 	return SUCCESS;
 }
 
+// fem/inner_product : geometry.h
 

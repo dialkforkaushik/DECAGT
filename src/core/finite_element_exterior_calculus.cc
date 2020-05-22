@@ -24,6 +24,212 @@
 #endif
 
 
+int set_ordering(int dim,
+				 Vector2I &sets) {
+
+	size_t s1 = sets.size();
+	size_t s2 = sets[0].size();
+
+	std::vector < std::pair <int, VectorI> > sorted_pair; 
+	for(size_t i = 0; i < s1; ++i) {
+		int k = 0;
+		for(size_t j = 0; j < s2; ++j) {
+			if(sets[i][j] != 0) {
+				k = 10 * k + sets[i][j];
+			}
+		}
+		sorted_pair.push_back(std::make_pair(k, sets[i]));
+	}
+
+	std::sort(sorted_pair.rbegin(), sorted_pair.rend()); 
+	
+	for(size_t i = 0; i < s1; ++i) {
+		sets[i] = sorted_pair[i].second;
+	}
+
+	return SUCCESS;
+}
+
+int FiniteElementExteriorCalculus::omega_ij(double &omega,
+											VectorD &bary_coords,
+											VectorD &grad_bary_coords) {
+	
+	if(bary_coords.size() != 2 || grad_bary_coords.size() != 2) {
+		return FAILURE;
+	}
+
+	omega = bary_coords[0] * grad_bary_coords[1] - bary_coords[1] * grad_bary_coords[0];
+
+	return SUCCESS;
+}
+
+
+int FiniteElementExteriorCalculus::bb_basis(double &bernstein_poly,
+											 VectorI &alpha,
+											 int n,
+											 VectorD &bary_coords) {
+
+	size_t size = alpha.size();
+
+	if(size != bary_coords.size()) {
+		return FAILURE;
+	}
+
+	double temp_value;
+
+	for(size_t i = 0; i < size; ++i) {
+		int fact = alpha[i];
+		factorial(fact);
+		temp_value = pow(bary_coords[i], alpha[i])/fact;
+	}
+
+	factorial(n);
+	bernstein_poly = n * temp_value;
+
+	return SUCCESS;
+}
+
+
+int FiniteElementExteriorCalculus::compute_index_sets_p(Vector2I &sets,
+												   		 int sum,
+												   		 int dim,
+												   		 int d) {
+
+	if(dim == 3) {
+		int num_faces;
+		binomialCoeff(num_faces,
+					  d+1,
+					  dim);
+
+		for(int i = 0; i < num_faces; ++i) {
+			Vector2I temp_sets;
+			compute_index_sets_o(temp_sets,
+						   		 sum,
+						   		 0,
+						   		 dim - 1);
+			size_t temp_sets_size = temp_sets.size();
+			for(size_t j = 0; j < temp_sets_size - 1; ++j) {
+				temp_sets[j].insert(temp_sets[j].begin() + i, 0);
+				sets.push_back(temp_sets[j]);
+			}
+		}
+	}
+
+	else if(dim == 4) {
+		compute_index_sets_o(sets,
+					   		 sum,
+					   		 0);
+		sets.pop_back();
+	}
+
+	else {
+		return FAILURE;
+	}
+
+	return SUCCESS;
+
+}
+
+
+int FiniteElementExteriorCalculus::compute_index_sets_t(Vector2I &sets,
+												   		 int sum,
+												   		 int dim,
+												   		 int d) {
+
+	if(dim != 3) {
+		return FAILURE;
+	}
+
+	int num_faces;
+	binomialCoeff(num_faces,
+				  d+1,
+				  dim);
+
+	for(int i = 0; i < num_faces; ++i) {
+		Vector2I temp_sets;
+		compute_index_sets_o(temp_sets,
+					   		 sum,
+					   		 0,
+					   		 dim - 1);
+		size_t temp_sets_size = temp_sets.size();
+		for(size_t j = 0; j < temp_sets_size; ++j) {
+			temp_sets[j].insert(temp_sets[j].begin() + i, 0);
+			sets.push_back(temp_sets[j]);
+		}
+	}
+
+	return SUCCESS;
+
+}
+
+int FiniteElementExteriorCalculus::compute_index_sets_o(Vector2I &sets,
+												   		 int sum,
+												   		 int dim,
+												   		 int d) {
+
+	// omega_ij ()
+
+  
+    VectorI p(d+1);
+    int k = 0;
+    p[k] = sum;
+  
+  	Vector2I temp_sets;
+
+    while (true) { 
+    	int s = std::accumulate(p.begin(), p.end(), 0);
+        if (k + 1 == dim || (dim == 0 && s == sum)) {
+        	temp_sets.push_back(p);
+        }
+  
+        int rem_val = 0; 
+        while (k >= 0 && p[k] == 1) { 
+            rem_val += p[k]; 
+            --k; 
+        } 
+  
+        if (k < 0) {
+        	break;
+        }
+  
+        --p[k]; 
+        ++rem_val; 
+  
+        while (rem_val > p[k]) { 
+            p[k+1] = p[k]; 
+            rem_val = rem_val - p[k]; 
+            ++k; 
+        } 
+  
+        p[k+1] = rem_val; 
+        ++k; 
+    }
+
+    size_t temp_sets_size = temp_sets.size();
+
+    if(temp_sets_size == 0) {
+    	return FAILURE;
+    }
+
+    for (size_t i = 0; i < temp_sets_size; ++i) {
+    	VectorI v = temp_sets[i];
+    	sort(v.begin(),v.end());
+    	do {
+			for(int y : v) {
+				sets.push_back(v);
+			}
+		} while (std::next_permutation(v.begin(), v.end()));
+    }
+
+    sets.erase(std::unique(sets.begin(), sets.end()), sets.end());
+
+    // set_ordering(dim, 
+    // 			 sets);
+
+    return SUCCESS;
+}
+
+
 int get_triplets(Vector3I &simplex_simplices,
 				 int &i,
 				 int &k,
@@ -54,34 +260,6 @@ int FiniteElementExteriorCalculus::set_hodge_stars_to_null() {
     }
 
     return SUCCESS;
-}
-
-
-inline int barycentric_gradients(Vector2D &pts,
-						         DenMatD &X) {
-
-	int cols = pts[0].size();
-	int rows = pts.size();
-
-	DenMatD V(rows - 1, cols);
-	MapEigVectorD v0(pts[0].data(), cols);
-	
-	for (int i = 1; i < rows; ++i) {
-		MapEigVectorD v(pts[i].data(), cols);
-		V.row(i - 1) = v - v0;
-	}
-
-	DenMatD temp_grads = V.completeOrthogonalDecomposition().pseudoInverse();
-	DenMatD grads = temp_grads.transpose();
-
-	DenMatD mat = DenMatD::Ones(1, grads.rows());
-	EigVectorD vec = (mat * grads).row(0);
-
-	X = DenMatD::Zero(grads.rows() + 1, grads.cols());
-	X.row(0) = -1 * vec;
-	X.bottomRows(grads.rows()) = grads;
-
-	return SUCCESS;
 }
 
 
@@ -483,16 +661,16 @@ int FiniteElementExteriorCalculus::mass_matrix_bb_0(DenMatD &mass_matrix,
 
 	Vector2I index_sets;
 	Vector2I temp_index_sets;
-	get_index_sets(index_sets,
-					1,
-					1,
-					d);
+	compute_index_sets_o(index_sets,
+						 1,
+						 1,
+						 d);
 	for (int i = 2; i <= std::min(max, d+1); ++i) {
 		temp_index_sets.clear();
-		get_index_sets(temp_index_sets,
-					   max,
-					   i,
-					   d);
+		compute_index_sets_o(temp_index_sets,
+							  max,
+							  i,
+							  d);
 		index_sets.insert(index_sets.end(), temp_index_sets.begin(), temp_index_sets.end());
 	}
 
