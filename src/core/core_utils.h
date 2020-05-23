@@ -68,6 +68,9 @@ double get_simplex_volume(Vector2D &vertices);
 int circumcenter_barycentric(DenMatD &pts_matrix,
 							 DenMatD &bary_coords);
 
+int get_permutations(Vector2I &permutations,
+					 Vector2I &vec);
+
 double error_0(VectorD &U,
 				int q_order,
 				Vector3I &simplices,

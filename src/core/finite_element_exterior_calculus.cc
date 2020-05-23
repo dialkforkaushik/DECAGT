@@ -24,8 +24,7 @@
 #endif
 
 
-int set_ordering(int dim,
-				 Vector2I &sets) {
+int set_increasing_ordering(Vector2I &sets) {
 
 	size_t s1 = sets.size();
 	size_t s2 = sets[0].size();
@@ -41,13 +40,52 @@ int set_ordering(int dim,
 		sorted_pair.push_back(std::make_pair(k, sets[i]));
 	}
 
-	std::sort(sorted_pair.rbegin(), sorted_pair.rend()); 
+	std::sort(sorted_pair.begin(), sorted_pair.end()); 
 	
 	for(size_t i = 0; i < s1; ++i) {
 		sets[i] = sorted_pair[i].second;
 	}
 
 	return SUCCESS;
+}
+
+
+int get_sets_sum_to_n(Vector2I &sets,
+					  int &n,
+					  int &dim,
+					  int d = 3) {
+	VectorI p(d+1);
+    int k = 0;
+    p[k] = n;
+
+    while (true) { 
+    	int s = std::accumulate(p.begin(), p.end(), 0);
+        if (k + 1 == dim || (dim == 0 && s == n)) {
+        	sets.push_back(p);
+        }
+  
+        int rem_val = 0; 
+        while (k >= 0 && p[k] == 1) { 
+            rem_val += p[k]; 
+            --k; 
+        } 
+  
+        if (k < 0) {
+        	break;
+        }
+  
+        --p[k]; 
+        ++rem_val; 
+  
+        while (rem_val > p[k]) { 
+            p[k+1] = p[k]; 
+            rem_val = rem_val - p[k]; 
+            ++k; 
+        } 
+  
+        p[k+1] = rem_val; 
+        ++k; 
+    }
 }
 
 int FiniteElementExteriorCalculus::omega_ij(double &omega,
@@ -91,7 +129,7 @@ int FiniteElementExteriorCalculus::bb_basis(double &bernstein_poly,
 
 
 int FiniteElementExteriorCalculus::compute_index_sets_p(Vector2I &sets,
-												   		 int sum,
+												   		 int n,
 												   		 int dim,
 												   		 int d) {
 
@@ -101,10 +139,10 @@ int FiniteElementExteriorCalculus::compute_index_sets_p(Vector2I &sets,
 					  d+1,
 					  dim);
 
-		for(int i = 0; i < num_faces; ++i) {
+		for(int i = num_faces - 1; i >= 0; --i) {
 			Vector2I temp_sets;
 			compute_index_sets_o(temp_sets,
-						   		 sum,
+						   		 n,
 						   		 0,
 						   		 dim - 1);
 			size_t temp_sets_size = temp_sets.size();
@@ -117,7 +155,7 @@ int FiniteElementExteriorCalculus::compute_index_sets_p(Vector2I &sets,
 
 	else if(dim == 4) {
 		compute_index_sets_o(sets,
-					   		 sum,
+					   		 n,
 					   		 0);
 		sets.pop_back();
 	}
@@ -132,7 +170,7 @@ int FiniteElementExteriorCalculus::compute_index_sets_p(Vector2I &sets,
 
 
 int FiniteElementExteriorCalculus::compute_index_sets_t(Vector2I &sets,
-												   		 int sum,
+												   		 int n,
 												   		 int dim,
 												   		 int d) {
 
@@ -145,16 +183,21 @@ int FiniteElementExteriorCalculus::compute_index_sets_t(Vector2I &sets,
 				  d+1,
 				  dim);
 
-	for(int i = 0; i < num_faces; ++i) {
+	for(int i = num_faces - 1; i >= 0; --i) {
 		Vector2I temp_sets;
+		Vector2I vec;
 		compute_index_sets_o(temp_sets,
-					   		 sum,
+					   		 n,
 					   		 0,
 					   		 dim - 1);
 		size_t temp_sets_size = temp_sets.size();
 		for(size_t j = 0; j < temp_sets_size; ++j) {
 			temp_sets[j].insert(temp_sets[j].begin() + i, 0);
-			sets.push_back(temp_sets[j]);
+			vec.push_back(temp_sets[j]);
+		}
+		set_increasing_ordering(vec);
+		for(size_t j = 0; j < temp_sets_size; ++j) {
+			sets.push_back(vec[j]);
 		}
 	}
 
@@ -163,66 +206,72 @@ int FiniteElementExteriorCalculus::compute_index_sets_t(Vector2I &sets,
 }
 
 int FiniteElementExteriorCalculus::compute_index_sets_o(Vector2I &sets,
-												   		 int sum,
+												   		 int n,
 												   		 int dim,
 												   		 int d) {
 
-	// omega_ij ()
-
-  
-    VectorI p(d+1);
-    int k = 0;
-    p[k] = sum;
-  
   	Vector2I temp_sets;
+  	Vector2I face_indices;
 
-    while (true) { 
-    	int s = std::accumulate(p.begin(), p.end(), 0);
-        if (k + 1 == dim || (dim == 0 && s == sum)) {
-        	temp_sets.push_back(p);
-        }
-  
-        int rem_val = 0; 
-        while (k >= 0 && p[k] == 1) { 
-            rem_val += p[k]; 
-            --k; 
-        } 
-  
-        if (k < 0) {
-        	break;
-        }
-  
-        --p[k]; 
-        ++rem_val; 
-  
-        while (rem_val > p[k]) { 
-            p[k+1] = p[k]; 
-            rem_val = rem_val - p[k]; 
-            ++k; 
-        } 
-  
-        p[k+1] = rem_val; 
-        ++k; 
-    }
+  	if(dim == 0) {
+  		get_sets_sum_to_n(temp_sets,
+  					  n,
+  					  dim,
+  					  d);
 
-    size_t temp_sets_size = temp_sets.size();
+  		get_permutations(sets,
+    				 temp_sets);
 
-    if(temp_sets_size == 0) {
-    	return FAILURE;
-    }
+  		set_increasing_ordering(sets);
+  	}
 
-    for (size_t i = 0; i < temp_sets_size; ++i) {
-    	VectorI v = temp_sets[i];
-    	sort(v.begin(),v.end());
-    	do {
-			for(int y : v) {
-				sets.push_back(v);
+  	else {
+  		Vector2I temp;
+  		get_sets_sum_to_n(temp,
+	  					  dim,
+	  					  dim,
+	  					  d);
+
+  		get_permutations(face_indices,
+    				 	 temp);
+
+  		size_t face_indices_size = face_indices.size();
+
+  		temp.clear();
+		get_sets_sum_to_n(temp,
+				   		  n,
+				   		  dim,
+				   		  dim - 1);
+		get_permutations(temp_sets,
+				 	 	 temp);
+
+		size_t temp_sets_size = temp_sets.size();
+
+  		for(size_t i = 0; i < face_indices_size; ++i) {
+  			Vector2I vec2;
+			for(size_t k = 0; k < temp_sets_size; ++k) {
+				VectorI vec1;
+				int index = 0;
+				
+				for(size_t j = 0; j < d + 1; ++j) {
+					if(face_indices[i][j] == 0) {
+						vec1.push_back(0);
+					}
+					else {
+						vec1.push_back(temp_sets[k][index]);
+						++index;
+					}
+				}
+				
+				vec2.push_back(vec1);
 			}
-		} while (std::next_permutation(v.begin(), v.end()));
-    }
-
-    sets.erase(std::unique(sets.begin(), sets.end()), sets.end());
-
+			set_increasing_ordering(vec2);
+			for(size_t j = 0; j < temp_sets_size; ++j) {
+				sets.push_back(vec2[j]);
+			}
+		}
+  	}
+  
     // set_ordering(dim, 
     // 			 sets);
 

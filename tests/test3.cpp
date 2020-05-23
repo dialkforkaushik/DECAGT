@@ -11,12 +11,9 @@ int main (int argc, char const *argv[]) {
 	
 	FiniteElementExteriorCalculus fem(sc);
 	fem.compute_index_sets_p(sets,
-							 3,
-							 3);
+							 4,
+							 4);
 	print_vector(sets);
 	std::cout<<sets.size();
 	return 0;
 }
-
-
-

@@ -298,6 +298,50 @@ int count_columns(std::string &line,
 }
 
 
+int get_permutations(Vector2I &permutations,
+					 Vector2I &vec) {
+
+	size_t vec_size = vec.size();
+
+    if(vec_size == 0) {
+    	return FAILURE;
+    }
+
+    for (size_t i = 0; i < vec_size; ++i) {
+    	VectorI v = vec[i];
+    	sort(v.begin(),v.end());
+    	do {
+			for(int y : v) {
+				permutations.push_back(v);
+			}
+		} while (std::next_permutation(v.begin(), v.end()));
+    }
+
+    permutations.erase(std::unique(permutations.begin(), permutations.end()), permutations.end());
+
+    size_t s1 = permutations.size();
+	size_t s2 = permutations[0].size();
+
+	std::vector < std::pair <int, VectorI> > sorted_pair; 
+	for(size_t i = 0; i < s1; ++i) {
+		int k = 0;
+		for(size_t j = 0; j < s2; ++j) {
+			if(permutations[i][j] != 0) {
+				k = 10 * k + permutations[i][j];
+			}
+		}
+		sorted_pair.push_back(std::make_pair(k, permutations[i]));
+	}
+
+	std::sort(sorted_pair.rbegin(), sorted_pair.rend()); 
+	
+	for(size_t i = 0; i < s1; ++i) {
+		permutations[i] = sorted_pair[i].second;
+	}
+
+	return SUCCESS;
+}
+
 int compute_combinations(Vector2I &vector,
 						 int &N,
 						 int &K,
