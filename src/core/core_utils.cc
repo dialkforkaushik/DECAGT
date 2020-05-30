@@ -58,6 +58,26 @@ int binomialCoeff(int &nCk,
 }
 
 
+int binomialCoeff(long long &nCk,
+				  int n,
+				  int k) {  
+	
+    long long res = 1;  
+  
+    if ( k > n - k )  
+        k = n - k;  
+  
+    for (long long i = 0; i < k; ++i)  {  
+        res *= (n - i);  
+        res /= (i + 1);  
+    }  
+  
+    nCk = res;
+
+    return SUCCESS; 
+}
+
+
 int l2_norm(double norm,
 			VectorD v) {
 
@@ -71,6 +91,17 @@ int l2_norm(double norm,
 	return SUCCESS;
 }
 
+int get_sum(int &sum,
+			VectorI vec) {
+
+	size_t size = vec.size();
+	sum = 0;
+	for (int i = 0; i < size; ++i) {
+		sum += vec[i];
+	}
+
+	return SUCCESS;
+}
 
 double get_simplex_volume(Vector2D &vertices) {
 
@@ -317,6 +348,7 @@ int get_permutations(Vector2I &permutations,
 		} while (std::next_permutation(v.begin(), v.end()));
     }
 
+    std::sort(permutations.begin(), permutations.end());
     permutations.erase(std::unique(permutations.begin(), permutations.end()), permutations.end());
 
     size_t s1 = permutations.size();
@@ -1050,8 +1082,9 @@ double quadratic_error_0_bb_mass(VectorD &U,
 		E += (vol*e/sum_weights - F.transpose() * vol * M * F);
 	}
 
-	return E;
+	return sqrt(E);
 }
+
 
 int print_vector(Vector2D &vec) {
 	size_t vec_size = vec.size();

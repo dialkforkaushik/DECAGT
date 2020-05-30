@@ -9,6 +9,13 @@ int binomialCoeff(int &nCk,
 				  int n,
 				  int k); 
 
+int binomialCoeff(long long &nCk,
+				  int n,
+				  int k);
+
+int get_sum(int &sum,
+			VectorI vec);
+
 int count_columns(std::string &line,
 				  int &columns);
 
@@ -70,6 +77,11 @@ int circumcenter_barycentric(DenMatD &pts_matrix,
 
 int get_permutations(Vector2I &permutations,
 					 Vector2I &vec);
+
+
+int read_quadratures(Vector2D &nodes,
+					 VectorD &weights,
+			  		 std::string data);
 
 double error_0(VectorD &U,
 				int q_order,

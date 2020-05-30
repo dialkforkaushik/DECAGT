@@ -64,6 +64,7 @@ PYBIND11_MODULE(decagt, m) {
         .def("compute_index_sets_o", &FiniteElementExteriorCalculus::compute_index_sets_o)
         .def("compute_index_sets_t", &FiniteElementExteriorCalculus::compute_index_sets_t)
         .def("compute_index_sets_p", &FiniteElementExteriorCalculus::compute_index_sets_p)
+        .def("bb_error", &FiniteElementExteriorCalculus::bb_error, py::call_guard<py::gil_scoped_release>())
         .def_readonly("hodge_stars", &FiniteElementExteriorCalculus::hodge_stars)
         .def_readonly("all_hodge_stars", &FiniteElementExteriorCalculus::all_hodge_stars);
 

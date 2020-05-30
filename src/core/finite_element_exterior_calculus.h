@@ -29,7 +29,8 @@ class FiniteElementExteriorCalculus: public GeometryComplex {
 
     int set_hodge_stars_to_null();
 
-    int mass_matrix_bb_0(DenMatD &mass_matrix, 
+    int mass_matrix_bb_0(DenMatD &mass_matrix,
+    					 Vector2I &index_sets,
     					 int n, 
     					 int m,
     					 int d = 3);
@@ -42,6 +43,13 @@ class FiniteElementExteriorCalculus: public GeometryComplex {
     int omega_ij(double &omega,
 				VectorD &bary_coords,
 				VectorD &grad_bary_coords);
+
+    int phi_FT(double &phi,
+			   VectorI &alpha,
+			   int n,
+			   VectorD &bary_coords,
+			   VectorD &grad_bary_coords,
+			   VectorI &local_indices);
 
     int compute_index_sets_o(Vector2I &sets,
 				   			 int sum,
@@ -57,6 +65,12 @@ class FiniteElementExteriorCalculus: public GeometryComplex {
 				   			 int sum,
 				   			 int dim,
 				   			 int d = 3);
+
+    double bb_error(int n,
+				    Vector3I &simplices,
+					Vector2D &vertices,
+					VectorI &num_simplices,
+					int q_order = 4);
 };
 
 #endif
