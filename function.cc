@@ -7,9 +7,9 @@
 extern "C" double function(std::vector < double > f) {
 	double out = 0.0;
 	for(int i = 0; i < f.size(); ++i) {
-		out += sin(f[i]*M_PI);
+		// out += sin(f[i]*M_PI);
 		// out += f[i]*f[i];
-		// out += f[i];
+		out += f[i];
 		// out += f[i]*f[i]*f[i];
 	}
 

@@ -21,7 +21,7 @@ def plot(x, y, ylabel="", xlabel="", title="", figname="fig.png"):
 		slope_ary.append(slope)
 	print("slope: ", slope_ary)
 
-	# plt.show()
+	plt.show()
 
 
 def test1():
@@ -134,13 +134,10 @@ def test3():
 	return np.arange(1, 11, 1), errors
 
 
-# x, y = test1()
-# plot(x, y, "error", "Degree of Polynomial", "Test 1")
+x, y = test1()
+plot(x, y, "error", "Degree of Polynomial", "Test 1")
 
-x, y = test2(0)
+# x, y = test2(0)
 
 # x, y = test3()
 
-
-# print("max edge len: " + str(x[j]))
-# 		print("")

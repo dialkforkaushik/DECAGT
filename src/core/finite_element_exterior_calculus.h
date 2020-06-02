@@ -29,13 +29,25 @@ class FiniteElementExteriorCalculus: public GeometryComplex {
 
     int set_hodge_stars_to_null();
 
-    int mass_matrix_bb_0(DenMatD &mass_matrix,
-    					 Vector2I &index_sets,
+    int mass_matrix_bb_1(DenMatD &mass_matrix,
     					 int n, 
     					 int m,
     					 int d = 3);
+
+    int mass_matrix_bb_curl(DenMatD &mass_matrix,
+    						Vector2D &pts,
+							int n,
+							int m);
+
+    int M_alpha_beta(double &M,
+			  		VectorI &alpha,
+			  		VectorI &beta);
+
+    int S_n(DenMatD &S,
+			Vector2D &points,
+	  		int n);
     
-    int bb_basis(double &bernstein_poly,
+    int bernstein(double &bernstein_poly,
 				 VectorI &alpha,
 				 int n,
 				 VectorD &bary_coords);

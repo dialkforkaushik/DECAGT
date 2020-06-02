@@ -107,29 +107,58 @@ int FiniteElementExteriorCalculus::phi_FT(double &phi,
 		return FAILURE;
 	}
 
-	double temp_value = 1;
-	double bernstein_poly;
+	// double temp_value = 1;
+	// double bernstein_poly;
 
-	for(size_t i = 0; i < size; ++i) {
-		int fact = alpha[i];
-		factorial(fact);
-		temp_value *= pow(bary_coords[i], alpha[i])/fact;
+	// for(size_t i = 0; i < size; ++i) {
+	// 	int fact = alpha[i];
+	// 	factorial(fact);
+	// 	temp_value *= pow(bary_coords[i], alpha[i])/fact;
+	// }
+
+	// int fact = n;
+	// factorial(fact);
+	// bernstein_poly = fact * temp_value;
+
+	// temp_value = 0;
+	// size_t local_indices_size = local_indices.size();
+
+	// for(size_t i = 0; i < local_indices_size; ++i) {
+	// 	double omega = 0;
+	// 	omega = bary_coords[(i+1)%local_indices_size] * grad_bary_coords[(i+2)%local_indices_size] - bary_coords[(i+2)%local_indices_size] * grad_bary_coords[(i+1)%local_indices_size];
+	// 	temp_value += alpha[i]*omega;
+	// }
+
+	// phi = (n+1) * bernstein_poly * temp_value;
+
+	Vector2I SIGMA;
+	Vector2I temp_local_indices;
+
+	temp_local_indices.push_back(local_indices);
+	get_permutations(SIGMA,
+					 temp_local_indices);
+
+	size_t SIGMA_size = SIGMA.size();
+
+	phi = 0;
+
+	for (size_t i = 0; i < SIGMA_size; ++i) {
+		VectorI sigma = SIGMA[i];
+
+		double c = (alpha[sigma[0]] + 1) * (alpha[sigma[2]] * grad_bary_coords[1] - alpha[sigma[1]] * grad_bary_coords[2]);
+
+		double temp_phi = 0;
+		VectorI temp_alpha = alpha;
+		temp_alpha[sigma[0]] += 1;
+
+		bernstein(temp_phi,
+				 temp_alpha,
+				 n + 1,
+				 bary_coords);
+
+		phi += c * temp_phi;
+
 	}
-
-	int fact = n;
-	factorial(fact);
-	bernstein_poly = fact * temp_value;
-
-	temp_value = 0;
-	size_t local_indices_size = local_indices.size();
-
-	for(size_t i = 0; i < local_indices_size; ++i) {
-		double omega = 0;
-		omega = bary_coords[(i+1)%local_indices_size] * grad_bary_coords[(i+2)%local_indices_size] - bary_coords[(i+2)%local_indices_size] * grad_bary_coords[(i+1)%local_indices_size];
-		temp_value += alpha[i]*omega;
-	}
-
-	phi = (n+1) * bernstein_poly * temp_value;
 
 	return SUCCESS;
 }
@@ -148,7 +177,7 @@ int FiniteElementExteriorCalculus::omega_ij(double &omega,
 }
 
 
-int FiniteElementExteriorCalculus::bb_basis(double &bernstein_poly,
+int FiniteElementExteriorCalculus::bernstein(double &bernstein_poly,
 											 VectorI &alpha,
 											 int n,
 											 VectorD &bary_coords) {
@@ -162,13 +191,19 @@ int FiniteElementExteriorCalculus::bb_basis(double &bernstein_poly,
 	double temp_value = 1;
 
 	for(size_t i = 0; i < size; ++i) {
-		int fact = alpha[i];
+		long long fact = alpha[i];
 		factorial(fact);
 		temp_value *= pow(bary_coords[i], alpha[i])/fact;
 	}
 
-	factorial(n);
-	bernstein_poly = n * temp_value;
+	int sum = std::accumulate(alpha.begin(), alpha.end(), 0);
+	
+	long long num = n;
+	factorial(num);
+	long long den = n - sum;
+	factorial(den);
+
+	bernstein_poly = (num/den) * temp_value;
 
 	return SUCCESS;
 }
@@ -507,7 +542,7 @@ int FiniteElementExteriorCalculus::compute_hodge_star_k(int &k) {
 				size_t index = temp_simplices[complex_dimension][i][j];
 				pts.push_back(vertices[index]);
 			}
-			barycentric_gradients(pts, d_lambda);
+			barycentric_gradients(d_lambda, pts);
 
 			for (int j = 0; j < num_k_form_pairs; ++j) {
 
@@ -700,7 +735,7 @@ int FiniteElementExteriorCalculus::compute_hodge_stars() {
 					size_t index = temp_simplices[complex_dimension][i][j];
 					pts.push_back(vertices[index]);
 				}
-				barycentric_gradients(pts, d_lambda);
+				barycentric_gradients(d_lambda, pts);
 
 				for (int j = 0; j < num_k_form_pairs; ++j) {
 
@@ -750,8 +785,445 @@ int FiniteElementExteriorCalculus::compute_hodge_stars() {
 }
 
 
-int FiniteElementExteriorCalculus::mass_matrix_bb_0(DenMatD &mass_matrix,
-													Vector2I &index_sets,
+int FiniteElementExteriorCalculus::M_alpha_beta(double &M,
+										  		VectorI &alpha,
+										  		VectorI &beta) {
+
+	int n = std::accumulate(alpha.begin(), alpha.end(), 0);
+	int m = std::accumulate(beta.begin(), beta.end(), 0);
+
+	size_t d = alpha.size();
+
+	long long nCk_1;
+	long long nCk_2;
+
+	binomialCoeff(nCk_1,
+				  n + m,
+				  n);
+	binomialCoeff(nCk_2,
+				  n + m + 3,
+				  3);
+
+	double den = nCk_1 * nCk_2;
+	double num = 1.0;
+
+	for (size_t i = 0; i < d; ++i) {
+		long long nCk;
+		binomialCoeff(nCk,
+					  alpha[i] + beta[i],
+					  alpha[i]);
+		num *= nCk;
+	}
+
+	M = num/den;
+
+	return SUCCESS;
+}
+
+
+int FiniteElementExteriorCalculus::S_n(DenMatD &S,
+									   Vector2D &pts,
+									   int n) {
+
+	if (n == 0) {
+		DenMatD gradients;
+		barycentric_gradients(gradients,
+							  pts);
+
+		size_t gradients_size = gradients.rows();
+		S.resize(gradients_size, gradients_size);
+
+		for (size_t i = 0; i < gradients_size; ++i) {
+			for (size_t j = 0; j <=i; ++j) {
+				S.coeffRef(i,j) = gradients.row(i).dot(gradients.row(j));
+				if (i != j) {
+					S.coeffRef(j, i) = S.coeffRef(i, j);
+				}
+			}
+		}
+	}
+		
+	return SUCCESS;
+
+}
+
+
+int FiniteElementExteriorCalculus::mass_matrix_bb_curl(DenMatD &mass_matrix,
+													   Vector2D &pts,
+													   int n,
+													   int m) {
+
+	int max = std::max(n, m);
+
+	if (max < 0) {
+		return FAILURE;
+	}
+
+	Vector2I alpha;
+	Vector2I temp_alpha;
+	VectorI ordered_basis_sizes;
+	Vector2I e;
+
+	compute_index_sets_o(e,
+						 1,
+						 1);
+
+	compute_index_sets_o(alpha,
+						 2,
+						 2);
+	ordered_basis_sizes.push_back(alpha.size());
+
+	size_t total = alpha.size();
+	for (int i = 2; i <= 4; ++i) {
+		temp_alpha.clear();
+		compute_index_sets_o(temp_alpha,
+							  max + 1,
+							  i);
+		
+		size_t temp_alpha_size = temp_alpha.size();
+		if (temp_alpha_size == 0) {
+			continue;
+		}
+		ordered_basis_sizes.push_back(total + temp_alpha_size);
+		alpha.insert(alpha.end(), temp_alpha.begin(), temp_alpha.end());
+		total += temp_alpha_size;
+	}
+
+	size_t size = alpha.size();
+	mass_matrix.resize(size, size);
+
+	DenMatD S_0;
+	S_n(S_0,
+		pts,
+		0);
+
+	for (size_t i = 0; i < size; ++i) {
+		for (size_t j = i; j < size; ++j) {
+
+			double x = 0;
+			
+			// 33a
+			if (i < ordered_basis_sizes[0] &&
+				j < ordered_basis_sizes[0]) {
+
+				VectorI index_p;
+				VectorI index_q;
+
+				for (int k = 0; k < 4; ++k) {
+					if (alpha[i][k] > 0) {
+						index_p.push_back(k);
+					}
+					if (alpha[j][k] > 0) {
+						index_q.push_back(k);
+					}
+				}
+
+				double M_ii;
+				M_alpha_beta(M_ii,
+							 e[index_p[0]],
+							 e[index_q[0]]);
+				double M_ij;
+				M_alpha_beta(M_ij,
+							 e[index_p[0]],
+							 e[index_q[1]]);
+				
+				double M_ji = M_ij;
+
+				double M_jj;
+				M_alpha_beta(M_jj,
+							 e[index_p[1]],
+							 e[index_q[1]]);
+				
+				double S_ii = S_0(index_p[0], index_q[0]);
+				double S_ij = S_0(index_p[0], index_q[1]);
+				double S_ji = S_0(index_p[1], index_q[0]);
+				double S_jj = S_0(index_p[1], index_q[1]);
+				
+
+				x = (M_ii * S_jj) - (M_ij * S_ji) - (M_ji * S_ij) + (M_jj * S_ii);
+			}
+
+			// 33b
+			else if(i < ordered_basis_sizes[0] && 
+				    j >= ordered_basis_sizes[0] && 
+				    j < ordered_basis_sizes[1]) {
+				
+				x = 0;
+				for (int s = 0; s < 4; ++s) {
+					VectorI vec;
+					std::transform(alpha[j].begin(), alpha[j].end(), e[s].begin(),
+									std::back_inserter(vec),
+									std::minus<int>());
+					
+					bool flag = false;
+					for (int k = 0; k < 4; ++k) {
+						if (vec[k] < 0) {
+							flag = true;
+							break;
+						}
+					}
+
+					if (flag) {
+						continue;
+					}
+
+					VectorI index_p;
+
+					for (int k = 0; k < 4; ++k) {
+						if (alpha[i][k] > 0) {
+							index_p.push_back(k);
+						}
+					}
+
+					double M_i;
+					M_alpha_beta(M_i,
+								 e[index_p[0]],
+								 vec);
+
+					double M_j;
+					M_alpha_beta(M_j,
+								 e[index_p[1]],
+								 vec);
+
+					double S_i = S_0.coeffRef(index_p[0], s);
+					double S_j = S_0.coeffRef(index_p[1], s);
+
+					x += (M_i * S_j) - (M_j * S_i);
+				}
+
+				x = x * (max + 1);
+			}
+
+			// 33c
+			else if(i < ordered_basis_sizes[0] && 
+				    j >= ordered_basis_sizes[1] && 
+				    j < ordered_basis_sizes[2]) {
+				
+				x = 0;
+				
+				Vector2I SIGMA;
+				Vector2I temp_local_indices;
+				VectorI local_indices;
+
+				for (int k = 0; k < 4; ++k) {
+					if (alpha[j][k] > 0) {
+						local_indices.push_back(k);
+					}
+				}
+
+				temp_local_indices.push_back(local_indices);
+				get_permutations(SIGMA,
+								 temp_local_indices);
+
+				size_t SIGMA_size = SIGMA.size();
+
+				VectorI index_p;
+
+				for (int k = 0; k < 4; ++k) {
+					if (alpha[i][k] > 0) {
+						index_p.push_back(k);
+					}
+				}
+
+				for (int k = 0; k < SIGMA_size; ++k) {
+					VectorI vec;
+					std::transform(alpha[j].begin(), alpha[j].end(), e[SIGMA[k][0]].begin(),
+										std::back_inserter(vec),
+										std::plus<int>());
+
+					double M_i;
+					M_alpha_beta(M_i,
+								 e[index_p[0]],
+								 vec);
+
+					double M_j;
+					M_alpha_beta(M_j,
+								 e[index_p[1]],
+								 vec);
+
+					double sigma_1 = SIGMA[k][0];
+					double sigma_2 = SIGMA[k][1];
+					double sigma_3 = SIGMA[k][2];
+
+					x += (M_i * (alpha[j][sigma_1] + 1) * (alpha[j][sigma_3] * S_0.coeffRef(index_p[1], sigma_2) - alpha[j][sigma_2] * S_0.coeffRef(index_p[1], sigma_3)))
+						 - (M_j * (alpha[j][sigma_1] + 1) * (alpha[j][sigma_3] * S_0.coeffRef(index_p[0], sigma_2) - alpha[j][sigma_2] * S_0.coeffRef(index_p[0], sigma_3)));
+				}
+			}
+
+			// 33e
+			else if(i >= ordered_basis_sizes[0] &&
+					i < ordered_basis_sizes[1] && 
+				    j >= ordered_basis_sizes[0] && 
+				    j < ordered_basis_sizes[1]) {
+				
+				x = 0;
+				for (int t = 0; t < 4; ++t) {
+					VectorI vec1;
+					std::transform(alpha[i].begin(), alpha[i].end(), e[t].begin(),
+										std::back_inserter(vec1),
+										std::minus<int>());
+
+					for (int s = 0; s < 4; ++s) {
+						VectorI vec2;
+						std::transform(alpha[j].begin(), alpha[j].end(), e[s].begin(),
+										std::back_inserter(vec2),
+										std::minus<int>());
+						
+						bool flag = false;
+						for (int k = 0; k < 4; ++k) {
+							if (vec1[k] < 0 || vec2[k] < 0) {
+								flag = true;
+								break;
+							}
+						}
+
+						if (flag) {
+							continue;
+						}
+
+						double M;
+						M_alpha_beta(M,
+									 vec1,
+									 vec2);
+
+						double S = S_0.coeffRef(t, s);
+
+						x += (M * S);
+					}
+				}
+
+				x = x * pow(max + 1, 2);
+			}
+
+			// 33f
+			else if(i >= ordered_basis_sizes[0] && 
+					i < ordered_basis_sizes[1] &&
+				    j >= ordered_basis_sizes[1] && 
+				    j < ordered_basis_sizes[2]) {
+				
+				x = 0;
+				
+				Vector2I SIGMA;
+				Vector2I temp_local_indices;
+				VectorI local_indices;
+
+				for (int k = 0; k < 4; ++k) {
+					if (alpha[j][k] > 0) {
+						local_indices.push_back(k);
+					}
+				}
+
+				temp_local_indices.push_back(local_indices);
+				get_permutations(SIGMA,
+								 temp_local_indices);
+
+				size_t SIGMA_size = SIGMA.size();
+
+				for (int t = 0; t < 4; ++t) {
+					VectorI vec1;
+					std::transform(alpha[i].begin(), alpha[i].end(), e[t].begin(),
+										std::back_inserter(vec1),
+										std::minus<int>());
+
+					for (int k = 0; k < SIGMA_size; ++k) {
+						VectorI vec2;
+						std::transform(alpha[j].begin(), alpha[j].end(), e[SIGMA[k][0]].begin(),
+											std::back_inserter(vec2),
+											std::plus<int>());
+
+						double M;
+						M_alpha_beta(M,
+									 vec1,
+									 vec2);
+
+						double sigma_1 = SIGMA[k][0];
+						double sigma_2 = SIGMA[k][1];
+						double sigma_3 = SIGMA[k][2];
+
+						x += (M * (alpha[j][sigma_1] + 1) * (alpha[j][sigma_3] * S_0.coeffRef(t, sigma_2) - alpha[j][sigma_2] * S_0.coeffRef(t, sigma_3)));
+					}
+				}
+
+				x = (max + 1) * x;
+			}
+
+			// 33h
+			else if(i >= ordered_basis_sizes[1] && 
+					i < ordered_basis_sizes[2] &&
+				    j >= ordered_basis_sizes[1] && 
+				    j < ordered_basis_sizes[2]) {
+				
+				x = 0;
+				
+				Vector2I SIGMA_p;
+				Vector2I SIGMA_q;
+				Vector2I temp_local_indices;
+				VectorI local_indices;
+
+				for (int k = 0; k < 4; ++k) {
+					if (alpha[i][k] > 0) {
+						local_indices.push_back(k);
+					}
+				}
+
+				temp_local_indices.push_back(local_indices);
+				get_permutations(SIGMA_p,
+								 temp_local_indices);
+
+				local_indices.clear();
+				temp_local_indices.clear();
+
+				for (int k = 0; k < 4; ++k) {
+					if (alpha[j][k] > 0) {
+						local_indices.push_back(k);
+					}
+				}
+
+				temp_local_indices.push_back(local_indices);
+				get_permutations(SIGMA_q,
+								 temp_local_indices);
+
+				size_t SIGMA_p_size = SIGMA_p.size();
+				size_t SIGMA_q_size = SIGMA_q.size();
+
+				for (int t = 0; t < SIGMA_p_size; ++t) {
+					VectorI vec1;
+					std::transform(alpha[i].begin(), alpha[i].end(), e[SIGMA_p[t][0]].begin(),
+										std::back_inserter(vec1),
+										std::plus<int>());
+
+					for (int s = 0; s < SIGMA_q_size; ++s) {
+						VectorI vec2;
+						std::transform(alpha[j].begin(), alpha[j].end(), e[SIGMA_q[s][0]].begin(),
+											std::back_inserter(vec2),
+											std::plus<int>());
+
+						double M;
+						M_alpha_beta(M,
+									 vec1,
+									 vec2);
+
+						x += M * (alpha[i][SIGMA_p[t][0]] + 1) * (alpha[j][SIGMA_q[s][0]] + 1)  
+						     * (alpha[i][SIGMA_p[t][2]] * alpha[j][SIGMA_q[s][2]] * S_0.coeffRef(SIGMA_p[t][1], SIGMA_q[s][1])
+						     	- alpha[i][SIGMA_p[t][2]] * alpha[j][SIGMA_q[s][1]] * S_0.coeffRef(SIGMA_p[t][1], SIGMA_q[s][2])
+						     	- alpha[i][SIGMA_p[t][1]] * alpha[j][SIGMA_q[s][2]] * S_0.coeffRef(SIGMA_p[t][2], SIGMA_q[s][1])
+						     	+ alpha[i][SIGMA_p[t][1]] * alpha[j][SIGMA_q[s][1]] * S_0.coeffRef(SIGMA_p[t][2], SIGMA_q[s][2]));
+					}
+				}
+			}
+
+			mass_matrix.coeffRef(i, j) = x;
+			if (i != j) {
+				mass_matrix.coeffRef(j, i) = x;
+			}
+		}
+	}
+
+	return SUCCESS;
+}
+
+
+int FiniteElementExteriorCalculus::mass_matrix_bb_1(DenMatD &mass_matrix,
 													int n,
 													int m,
 													int d) {
@@ -762,20 +1234,19 @@ int FiniteElementExteriorCalculus::mass_matrix_bb_0(DenMatD &mass_matrix,
 		return FAILURE;
 	}
 
-	// Vector2I index_sets;
-	// Vector2I temp_index_sets;
-	// compute_index_sets_o(index_sets,
-	// 					 1,
-	// 					 1);
+	Vector2I index_sets;
+	Vector2I temp_index_sets;
+	compute_index_sets_o(index_sets,
+						 1,
+						 1);
 
-	// // for (int i = 2; i <= std::min(max, d+1); ++i) {
-	// for (int i = 2; i <= 2; ++i) {
-	// 	temp_index_sets.clear();
-	// 	compute_index_sets_o(temp_index_sets,
-	// 						  max,
-	// 						  i);
-	// 	index_sets.insert(index_sets.end(), temp_index_sets.begin(), temp_index_sets.end());
-	// }
+	for (int i = 2; i <= std::min(max, d+1); ++i) {
+		temp_index_sets.clear();
+		compute_index_sets_o(temp_index_sets,
+							  max,
+							  i);
+		index_sets.insert(index_sets.end(), temp_index_sets.begin(), temp_index_sets.end());
+	}
 
 	size_t size = index_sets.size();
 	mass_matrix.resize(size, size);
@@ -786,13 +1257,8 @@ int FiniteElementExteriorCalculus::mass_matrix_bb_0(DenMatD &mass_matrix,
 			long long nCk_1;
 			long long nCk_2;
 			
-			int s1;
-			get_sum(s1,
-					index_sets[i]);
-
-			int s2;
-			get_sum(s2,
-					index_sets[j]);
+			int s1 = std::accumulate(index_sets[i].begin(), index_sets[i].end(), 0);
+			int s2 = std::accumulate(index_sets[j].begin(), index_sets[j].end(), 0);
 
 			binomialCoeff(nCk_1,
 						  s1 + s2,
@@ -867,7 +1333,7 @@ double FiniteElementExteriorCalculus::bb_error(int n,
 		
 		for(size_t j = 0; j < nodes_size; ++j) {
 			double bernstein_poly = 0;
-			bb_basis(bernstein_poly,
+			bernstein(bernstein_poly,
 					 alpha[i],
 					 sum,
 					 nodes[j]);
@@ -890,8 +1356,7 @@ double FiniteElementExteriorCalculus::bb_error(int n,
 		double vol = get_simplex_volume(pts);
 
 		DenMatD M;
-		mass_matrix_bb_0(M,
-						 alpha,
+		mass_matrix_bb_1(M,
 						 n,
 						 n);
 		M = M * vol;
@@ -936,9 +1401,9 @@ double FiniteElementExteriorCalculus::bb_error(int n,
 			sum_weight += weights[node_index];
 		}
 
-		// #ifdef MULTICORE
-		// 	#pragma omp critical
-		// #endif
+		#ifdef MULTICORE
+			#pragma omp critical
+		#endif
 		E += sqrt(vol*e/sum_weight);
 	}
 

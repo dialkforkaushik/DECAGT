@@ -5,6 +5,8 @@
 
 int factorial (int &n);
 
+int factorial(long long &n);
+
 int binomialCoeff(int &nCk,
 				  int n,
 				  int k); 

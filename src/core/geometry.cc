@@ -19,8 +19,8 @@
 #endif
 
 
-int GeometryComplex::barycentric_gradients(Vector2D &pts,
-						  				   DenMatD &X) {
+int GeometryComplex::barycentric_gradients(DenMatD &X,
+										   Vector2D &pts) {
 
 	int cols = pts[0].size();
 	int rows = pts.size();
@@ -224,7 +224,7 @@ std::tuple<Vector2D, DenMatD> GeometryComplex::simplex_quivers(VectorD form) {
     	for (size_t j = 0; j < complex_dimension + 1; ++j) {
     		pts.push_back(vertices[simplex_sorted[i][j]]);
     	}
-    	barycentric_gradients(pts, d_lambda);
+    	barycentric_gradients(d_lambda, pts);
 
     	Vector2I edges;
     	get_combinations_simplex(simplex_sorted[i], edges, 2);

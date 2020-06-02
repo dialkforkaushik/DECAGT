@@ -35,8 +35,8 @@ public:
 
   int get_highest_dim_circumcenters();
 
-  int barycentric_gradients(Vector2D &pts,
-                            DenMatD &X);
+  int barycentric_gradients(DenMatD &X,
+                            Vector2D &pts);
     
 };
 

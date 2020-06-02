@@ -38,6 +38,23 @@ int factorial(int &n) {
 }
 
 
+int factorial(long long &n) {
+	if (n == 0) {
+		n = 1;
+	}
+	else if (n > 0) {
+		for (long long i = n - 1; i > 0; --i) {
+	        n = n * i;   
+	    }
+	}
+	else {
+		return FAILURE;
+	}
+    
+    return SUCCESS;
+}
+
+
 int binomialCoeff(int &nCk,
 				  int n,
 				  int k) {  

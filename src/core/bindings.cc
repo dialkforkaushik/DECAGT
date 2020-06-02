@@ -59,7 +59,7 @@ PYBIND11_MODULE(decagt, m) {
         .def("compute_hodge_star_k", &FiniteElementExteriorCalculus::compute_hodge_star_k, py::call_guard<py::gil_scoped_release>())
 		.def("set_hodge_stars_to_null", &FiniteElementExteriorCalculus::set_hodge_stars_to_null)
         .def("mass_matrix_bb_0", &FiniteElementExteriorCalculus::mass_matrix_bb_0)
-        .def("bb_basis", &FiniteElementExteriorCalculus::bb_basis)
+        .def("bernstein", &FiniteElementExteriorCalculus::bernstein)
         .def("omega_ij", &FiniteElementExteriorCalculus::omega_ij)
         .def("compute_index_sets_o", &FiniteElementExteriorCalculus::compute_index_sets_o)
         .def("compute_index_sets_t", &FiniteElementExteriorCalculus::compute_index_sets_t)
