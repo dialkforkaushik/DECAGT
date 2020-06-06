@@ -52,9 +52,9 @@ class FiniteElementExteriorCalculus: public GeometryComplex {
 				 int n,
 				 VectorD &bary_coords);
 
-    int omega_ij(double &omega,
+    int omega_ij(EigVectorD &omega,
 				VectorD &bary_coords,
-				VectorD &grad_bary_coords);
+				DenMatD &grad_bary_coords);
 
     int phi_FT(double &phi,
 			   VectorI &alpha,
@@ -83,6 +83,12 @@ class FiniteElementExteriorCalculus: public GeometryComplex {
 					Vector2D &vertices,
 					VectorI &num_simplices,
 					int q_order = 4);
+
+    double bb_error_1(int n,
+				     Vector3I &simplices,
+					 Vector2D &vertices,
+					 VectorI &num_simplices,
+					 int q_order = 4);
 };
 
 #endif

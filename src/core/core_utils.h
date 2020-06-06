@@ -72,6 +72,9 @@ int get_closest_simplex_to_point(VectorD &point,
 
 double get_analytical_soln(VectorD &vec);
 
+int get_analytical_soln_vec(VectorD &out,
+							VectorD &vec);
+
 double get_simplex_volume(Vector2D &vertices);
 
 int circumcenter_barycentric(DenMatD &pts_matrix,
@@ -114,6 +117,8 @@ int print_vector(Vector2D &vec);
 int print_vector(Vector2I &vec);
 
 int print_vector(Vector3I &vec);
+
+int print_vector(Vector3D &vec);
 
 int print_vector(VectorD &vec);
 

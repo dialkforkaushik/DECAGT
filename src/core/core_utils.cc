@@ -21,6 +21,7 @@
 	#include <pybind11/numpy.h>
 #endif
 
+
 int factorial(int &n) {
 	if (n == 0) {
 		n = 1;
@@ -715,7 +716,7 @@ double get_analytical_soln(VectorD &vec) {
     }
 
     dlerror();
-    function_t function = (function_t) dlsym(handle, "function");
+    function_d function = (function_d) dlsym(handle, "function");
     const char *dlsym_error = dlerror();
     if (dlsym_error) {
         std::cerr << "Cannot load symbol 'function': " << dlsym_error << '\n';
@@ -725,6 +726,34 @@ double get_analytical_soln(VectorD &vec) {
 
     double output = function(vec);
     return output;
+}
+
+
+int get_analytical_soln_vec(VectorD &out,
+							VectorD &vec) {
+
+	void* handle = dlopen("./function.so", RTLD_LAZY);
+	if (!handle) {
+		system("g++ ./function.cc -o ./function.so -shared -fPIC");
+		handle = dlopen("./function.so", RTLD_LAZY);
+		if (!handle) {
+	        std::cerr << "Cannot open file: " << dlerror() << '\n';
+	        return FAILURE;
+	    }
+    }
+
+    dlerror();
+    function_v function = (function_v) dlsym(handle, "function");
+    const char *dlsym_error = dlerror();
+    if (dlsym_error) {
+        std::cerr << "Cannot load symbol 'function': " << dlsym_error << '\n';
+        dlclose(handle);
+        return FAILURE;
+    }
+
+    out = function(vec);
+
+    return SUCCESS;
 }
 
 
@@ -1130,6 +1159,22 @@ int print_vector(Vector2I &vec) {
 
 
 int print_vector(Vector3I &vec) {
+    for (int i = 0; i < vec.size(); ++i) {
+        for (int j = 0; j < vec[i].size(); ++j) {
+        	for (int k = 0; k < vec[i][j].size(); ++k) {
+        		std::cout << vec[i][j][k] << " ";
+        	}
+        	std::cout << std::endl << std::flush;
+        }
+
+        std::cout << std::endl << std::flush;
+    }
+
+    return SUCCESS;
+}
+
+
+int print_vector(Vector3D &vec) {
     for (int i = 0; i < vec.size(); ++i) {
         for (int j = 0; j < vec[i].size(); ++j) {
         	for (int k = 0; k < vec[i][j].size(); ++k) {

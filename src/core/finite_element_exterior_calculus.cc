@@ -163,15 +163,21 @@ int FiniteElementExteriorCalculus::phi_FT(double &phi,
 	return SUCCESS;
 }
 
-int FiniteElementExteriorCalculus::omega_ij(double &omega,
+int FiniteElementExteriorCalculus::omega_ij(EigVectorD &omega,
 											VectorD &bary_coords,
-											VectorD &grad_bary_coords) {
+											DenMatD &grad_bary_coords) {
 	
-	if(bary_coords.size() != 2 || grad_bary_coords.size() != 2) {
+	if(bary_coords.size() != 2 || grad_bary_coords.rows() != 2) {
 		return FAILURE;
 	}
 
-	omega = bary_coords[0] * grad_bary_coords[1] - bary_coords[1] * grad_bary_coords[0];
+	// std::cout<<"bary_coords: \n";
+	// print_vector(bary_coords);
+	// std::cout<<"grad_bary_coords: \n"<<grad_bary_coords<<"\n";
+
+	omega = bary_coords[0] * grad_bary_coords.row(1) - bary_coords[1] * grad_bary_coords.row(0);
+	
+	// std::cout<<"omega: \n"<<omega<<"\n";
 
 	return SUCCESS;
 }
@@ -1398,6 +1404,201 @@ double FiniteElementExteriorCalculus::bb_error(int n,
 			}
 
 			e += weights[node_index] * pow(get_analytical_soln(points) - f_dash, 2);
+			sum_weight += weights[node_index];
+		}
+
+		#ifdef MULTICORE
+			#pragma omp critical
+		#endif
+		E += sqrt(vol*e/sum_weight);
+	}
+
+	return E;
+}
+
+
+double FiniteElementExteriorCalculus::bb_error_1(int n,
+											     Vector3I &simplices,
+												 Vector2D &vertices,
+												 VectorI &num_simplices,
+												 int q_order) {
+
+	size_t N = num_simplices.size();
+	double E = 0.0;
+	size_t embed_dim = vertices[0].size();
+
+	Vector2D nodes;
+	VectorD weights;
+	Vector2D nodes_1d;
+	VectorD weights_1d;
+
+	std::string data = "./data/quadrature/d" + std::to_string(N-1) + "o" + std::to_string(q_order) + ".txt";
+	std::string data_1d = "./data/quadrature/d1o" + std::to_string(q_order) + ".txt";
+	
+	read_quadratures(nodes,
+					 weights,
+					 data);
+	size_t nodes_size = nodes.size();
+
+	read_quadratures(nodes_1d,
+					 weights_1d,
+					 data_1d);
+	size_t nodes_1d_size = nodes_1d.size();
+
+	Vector2I alpha;
+	Vector2I temp_alpha;
+
+	compute_index_sets_o(alpha,
+					 	 2,
+					 	 2);
+
+	int d = alpha[0].size();
+
+	// for(int i = 2; i <= std::min(n, d); ++i) {
+	// 	temp_alpha.clear();
+	// 	compute_index_sets_o(temp_alpha,
+	// 					 	 n,
+	// 					 	 i);
+
+	// 	alpha.insert(alpha.end(), temp_alpha.begin(), temp_alpha.end());
+	// }
+	size_t alpha_size = alpha.size();
+
+	// #ifdef MULTICORE
+	// 	#pragma omp parallel for
+	// #endif
+	// for(size_t i = 0; i < num_simplices[N-1]; ++i) {
+	for(size_t i = 0; i < 1; ++i) {
+		double e = 0;
+
+		Vector2D pts;
+		for(size_t k = 0; k < N; ++k) {
+			pts.push_back(vertices[simplices[N-1][i][k]]);
+		}
+		double vol = get_simplex_volume(pts);
+
+		// std::cout<<"vol: "<<vol<<"\n";
+
+		Vector3D edges_pts;
+		VectorI edge_indices = simplex_sub_simplices[i][1];
+		size_t edge_indices_size = edge_indices.size();
+
+		for(size_t j = 0; j < edge_indices_size; ++j) {
+			Vector2D temp_edges_pts;
+			for(size_t k = 0; k < 2; ++k) {
+				temp_edges_pts.push_back(vertices[simplices[1][edge_indices[j]][k]]);
+			}
+			edges_pts.push_back(temp_edges_pts);
+		}
+
+		// std::cout<<"Edges Points\n";
+		// print_vector(edges_pts);
+
+		// DenMatD M;
+		// mass_matrix_bb_1(M,
+		// 				 n,
+		// 				 n);
+		// M = M * vol;
+
+		DenMatD grad_bary_coords;
+		barycentric_gradients(grad_bary_coords,
+							  pts);
+
+		// std::cout<<"grad_bary_coords: \n"<<grad_bary_coords<<"\n";
+
+		double sum_weight = 0.0;
+
+		for(size_t node_index = 0; node_index < nodes_size; ++node_index) {
+			EigVectorD b(alpha_size);
+			DenMatD omega(alpha_size, embed_dim);
+			EigVectorD f(embed_dim);
+			EigVectorD f_dash(embed_dim);
+
+			for (size_t k = 0; k < alpha_size; ++k) {
+				EigVectorD temp_omega;
+				VectorD temp_bary_coords;
+				DenMatD temp_grad_bary_coords(2, embed_dim);
+				int c = 0;
+				for (size_t j = 0; j < d; ++j) {
+					if (alpha[k][j] > 0) {
+						temp_bary_coords.push_back(nodes[node_index][j]);
+						temp_grad_bary_coords.row(c) = grad_bary_coords.row(j);
+						++c;
+					}
+				}
+
+				omega_ij(temp_omega,
+						 temp_bary_coords,
+						 temp_grad_bary_coords);
+
+				omega.row(k) = temp_omega;
+			}
+
+			VectorD points(embed_dim, 0.0);
+			for(size_t v = 0; v < N; ++v) {
+				for(size_t l = 0; l < embed_dim; ++l) {
+					points[l] += pts[v][l] * nodes[node_index][v];
+				}
+			}
+
+			for(size_t j = 0; j < edge_indices_size; ++j) {
+				double trace = 0;
+
+				EigVectorD v0(embed_dim);
+				EigVectorD v1(embed_dim);
+				EigVectorD func(embed_dim);
+
+				for (size_t v = 0; v < embed_dim; ++v) {
+					v0.coeffRef(v) = edges_pts[j][0][v];
+					v1.coeffRef(v) = edges_pts[j][1][v];
+				}
+
+				double sum_weights = 0;
+
+				for (size_t node_1d = 0; node_1d < nodes_1d_size; ++node_1d) {
+					EigVectorD vec1;
+					VectorD vec2;
+					VectorD temp_f;
+
+					vec1 = (v0+v1)/2 + nodes_1d[node_1d][0] * (v1 - v0)/2;
+
+					for (size_t v = 0; v < embed_dim; ++v) {
+						vec2.push_back(vec1.coeffRef(v));
+					}
+					
+					get_analytical_soln_vec(temp_f,
+											vec2);
+
+					for (size_t v = 0; v < embed_dim; ++v) {
+						func.coeffRef(v) = temp_f[v];
+					}
+
+					trace += weights_1d[node_1d] * func.dot(v1 - v0);
+					sum_weights += weights_1d[node_1d];
+				}
+
+				// std::cout<<"trace: \n"<<trace<<"\n";				
+				b(j) = trace/sum_weights;
+			}
+
+			// std::cout<<"b: \n"<<b<<"\n";
+			// std::cout<<"omega: \n"<<omega<<"\n";
+
+			f_dash = b.transpose() * omega;
+
+			// std::cout<<"f_dash: \n"<<f_dash<<"\n";
+
+			VectorD F;
+			get_analytical_soln_vec(F,
+									points);
+
+			for (size_t j = 0; j < embed_dim; ++j) {
+				f.coeffRef(j) = F[j];
+			}
+
+			// std::cout<<"f: \n"<<f<<"\n";
+
+			e += weights[node_index] * pow((f-f_dash).norm(), 2);
 			sum_weight += weights[node_index];
 		}
 

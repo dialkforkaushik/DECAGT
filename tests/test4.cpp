@@ -16,19 +16,17 @@ int main (int argc, char const *argv[]) {
 		U.push_back(sc.vertices[i]);
 	}
 
-	DenMatD M;
-	fem.mass_matrix_bb_curl(M,U,1,1);
-	std::cout<<M<<"\n\n";
+	// DenMatD M;
+	// fem.mass_matrix_bb_curl(M,U,1,1);
+	// std::cout<<M<<"\n\n";
 
-	// for(int i = 1; i < 21; ++i) {
-	// 	error = fem.bb_error(i,
-	// 						sc.simplices,
-	// 						sc.vertices,
-	// 						sc.num_simplices,
-	// 						4);
+	error = fem.bb_error_1(1,
+							sc.simplices,
+							sc.vertices,
+							sc.num_simplices,
+							2);
 
-	// 	std::cout<<error<<"\n";
-	// }
+	std::cout<<error<<"\n";
 
 	return 0;
 }

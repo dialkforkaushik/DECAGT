@@ -18,6 +18,8 @@ typedef std::vector < float > VectorF;
 typedef std::vector < double > VectorD;
 typedef std::vector < VectorI > Vector2I;
 typedef std::vector < VectorD > Vector2D;
+typedef std::vector < Vector2I > Vector3I;
+typedef std::vector < Vector2D > Vector3D;
 
 typedef std::map < int, int > MapI;
 typedef std::map < Vector2I, int > MapVector2I;
@@ -36,7 +38,6 @@ typedef Eigen::VectorXi EigVectorI;
 
 typedef std::tuple < VectorD, double > TupleVD;
 
-typedef std::vector < Vector2I > Vector3I;
 typedef std::vector < SpMatI > VectorSpmatI;
 typedef std::vector < SpMatIC > VectorSpmatIC;
 typedef std::vector < SpMatD > VectorSpmatD;
@@ -48,7 +49,8 @@ typedef Eigen::Triplet < int > TripletI;
 typedef std::vector < TripletD > VectorTripletD;
 typedef std::vector < TripletI > VectorTripletI;
 
-typedef double(*function_t)(VectorD);
+typedef double(*function_d)(VectorD);
+typedef VectorD(*function_v)(VectorD);
 
 #endif
 
