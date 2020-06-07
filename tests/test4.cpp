@@ -17,14 +17,14 @@ int main (int argc, char const *argv[]) {
 	}
 
 	// DenMatD M;
-	// fem.mass_matrix_bb_curl(M,U,1,1);
+	// fem.bb_mass_matrix_H_curl(M,U,1);
 	// std::cout<<M<<"\n\n";
 
-	error = fem.bb_error_1(1,
-							sc.simplices,
-							sc.vertices,
-							sc.num_simplices,
-							2);
+	error = fem.bb_error_1(3,
+						   sc.simplices,
+						   sc.vertices,
+						   sc.num_simplices,
+						   4);
 
 	std::cout<<error<<"\n";
 

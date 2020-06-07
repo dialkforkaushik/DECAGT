@@ -34,10 +34,9 @@ class FiniteElementExteriorCalculus: public GeometryComplex {
     					 int m,
     					 int d = 3);
 
-    int mass_matrix_bb_curl(DenMatD &mass_matrix,
-    						Vector2D &pts,
-							int n,
-							int m);
+    int bb_mass_matrix_H_curl(DenMatD &mass_matrix,
+    						  Vector2D &pts,
+							  int n);
 
     int M_alpha_beta(double &M,
 			  		VectorI &alpha,
@@ -56,12 +55,25 @@ class FiniteElementExteriorCalculus: public GeometryComplex {
 				VectorD &bary_coords,
 				DenMatD &grad_bary_coords);
 
-    int phi_FT(double &phi,
-			   VectorI &alpha,
-			   int n,
-			   VectorD &bary_coords,
-			   VectorD &grad_bary_coords,
-			   VectorI &local_indices);
+    int grad_B(EigVectorD &grad_b,
+			  VectorI &alpha,
+			  int n,
+			  VectorD &bary_coords,
+			  DenMatD &grad_bary_coords);
+
+    int phi_FT(EigVectorD &phi,
+			  VectorI &alpha,
+			  int n,
+			  VectorD &bary_coords,
+			  DenMatD &grad_bary_coords,
+			  VectorI &local_indices);
+
+    int psi_T(EigVectorD &psi,
+			  VectorI &alpha,
+			  int n,
+			  int l,
+			  VectorD &bary_coords,
+			  DenMatD &grad_bary_coords);
 
     int compute_index_sets_o(Vector2I &sets,
 				   			 int sum,
@@ -85,10 +97,16 @@ class FiniteElementExteriorCalculus: public GeometryComplex {
 					int q_order = 4);
 
     double bb_error_1(int n,
-				     Vector3I &simplices,
-					 Vector2D &vertices,
-					 VectorI &num_simplices,
-					 int q_order = 4);
+				      Vector3I &simplices,
+					  Vector2D &vertices,
+					  VectorI &num_simplices,
+					  int q_order = 4);
+
+    double bb_error_1_1d_quad(int n,
+						       Vector3I &simplices,
+							   Vector2D &vertices,
+							   VectorI &num_simplices,
+							   int q_order = 4);
 };
 
 #endif

@@ -41,6 +41,7 @@ typedef std::tuple < VectorD, double > TupleVD;
 typedef std::vector < SpMatI > VectorSpmatI;
 typedef std::vector < SpMatIC > VectorSpmatIC;
 typedef std::vector < SpMatD > VectorSpmatD;
+typedef std::vector < DenMatD > VectorDenMatD;
 typedef std::vector < VectorMapI > VectorMap2I;
 typedef std::vector < std::vector < VectorMapI > > VectorMap3I;
 
