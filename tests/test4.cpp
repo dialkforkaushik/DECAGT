@@ -20,13 +20,16 @@ int main (int argc, char const *argv[]) {
 	// fem.bb_mass_matrix_H_curl(M,U,1);
 	// std::cout<<M<<"\n\n";
 
-	error = fem.bb_error_1(3,
-						   sc.simplices,
-						   sc.vertices,
-						   sc.num_simplices,
-						   4);
+	for (int i = 0; i < 21; ++i) {
+		error = fem.bb_error_1(i,
+							   sc.simplices,
+							   sc.vertices,
+							   sc.num_simplices,
+							   4);
 
-	std::cout<<error<<"\n";
+		std::cout<<error<<"\n";
+	}
+		
 
 	return 0;
 }

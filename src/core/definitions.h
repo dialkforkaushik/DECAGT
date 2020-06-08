@@ -51,7 +51,7 @@ typedef std::vector < TripletD > VectorTripletD;
 typedef std::vector < TripletI > VectorTripletI;
 
 typedef double(*function_d)(VectorD);
-typedef VectorD(*function_v)(VectorD);
+typedef VectorD(*function_v)(double*);
 
 #endif
 

@@ -751,7 +751,9 @@ int get_analytical_soln_vec(VectorD &out,
         return FAILURE;
     }
 
-    out = function(vec);
+    double arr[vec.size()];
+	std::copy(vec.begin(), vec.end(), arr);
+    out = function(arr);
 
     return SUCCESS;
 }

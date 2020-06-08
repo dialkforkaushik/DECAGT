@@ -16,17 +16,17 @@
 // 	return out;
 // }
 
-extern "C++" std::vector<double> function(std::vector < double > f) {
+extern "C" std::vector<double> function(double f[]) {
 
 	std::vector<double> out;
 
-	out.push_back(-1);
-	out.push_back(0);
-	out.push_back(1);
+	// out.push_back(1);
+	// out.push_back(1);
+	// out.push_back(1);
 
-	// out.push_back(f[1] - f[2]);
-	// out.push_back(f[2] - f[0]);
-	// out.push_back(f[0] - f[1]);
+	out.push_back(f[1] - f[2]);
+	out.push_back(f[2] - f[0]);
+	out.push_back(f[0] - f[1]);
 
 	return out;
 }
