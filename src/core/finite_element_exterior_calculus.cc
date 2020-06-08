@@ -128,6 +128,8 @@ int FiniteElementExteriorCalculus::psi_T(EigVectorD &psi,
 
 		psi += c * B;
 	}
+
+	return SUCCESS;
 }
 
 
@@ -228,6 +230,8 @@ int FiniteElementExteriorCalculus::grad_B(EigVectorD &grad_b,
 
 		grad_b += c * B;
 	}
+
+	return SUCCESS;
 }
 
 
