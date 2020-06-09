@@ -1868,7 +1868,7 @@ double FiniteElementExteriorCalculus::bb_error_1_1d_quad(int n,
 		#ifdef MULTICORE
 			#pragma omp critical
 		#endif
-		E += sqrt(vol*e/sum_weight);
+		E += vol*e/sum_weight;
 	}
 
 	return E;
@@ -1993,9 +1993,10 @@ double FiniteElementExteriorCalculus::bb_error(int n,
 		#ifdef MULTICORE
 			#pragma omp critical
 		#endif
-		E += sqrt(vol*e/sum_weight);
+		E += vol*e/sum_weight;
 	}
 
+	E = sqrt(E);
 	return E;
 }
 
@@ -2289,9 +2290,10 @@ double FiniteElementExteriorCalculus::bb_error_1(int n,
 		#ifdef MULTICORE
 			#pragma omp critical
 		#endif
-		E += sqrt(vol*e/sum_weight);
+		E += vol*e/sum_weight;
 	}
 
+	E = sqrt(E);
 	return E;
 }
 

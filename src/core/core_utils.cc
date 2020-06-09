@@ -865,9 +865,10 @@ double error_0(VectorD &U,
 		#ifdef MULTICORE
 			#pragma omp critical
 		#endif
-		E += sqrt(vol*e/sum_weights);
+		E += vol*e/sum_weights;
 	}
 
+	E = sqrt(E);
 	return E;
 }
 
@@ -946,9 +947,10 @@ double quadratic_error_0(VectorD &U,
 		#ifdef MULTICORE
 			#pragma omp critical
 		#endif
-		E += sqrt(vol*e/sum_weights);
+		E += vol*e/sum_weights;
 	}
 
+	E = sqrt(E);
 	return E;
 }
 
@@ -1029,9 +1031,10 @@ double quadratic_error_0_bb(VectorD &U,
 		#ifdef MULTICORE
 			#pragma omp critical
 		#endif
-		E += sqrt(vol*e/sum_weights);
+		E += vol*e/sum_weights;
 	}
 
+	E = sqrt(E);
 	return E;
 }
 

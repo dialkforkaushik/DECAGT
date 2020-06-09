@@ -17,7 +17,7 @@ def plot(x, y, ylabel="", xlabel="", title="", figname="fig.png"):
 
 	slope_ary = []
 	for i in range(1, y.shape[0]):
-		slope, intercept = np.polyfit(np.log(np.sort(x[i-1:i+1])), np.log(np.sort(y[i-1:i+1])), 1)
+		slope, intercept = np.polyfit(np.log(x[i-1:i+1]), np.log(y[i-1:i+1]), 1)
 		slope_ary.append(slope)
 	print("slope: ", slope_ary)
 
@@ -31,15 +31,19 @@ def test1():
 	#max edge length for 3d cube meshes (hardcoded for faster computation)
 	edge_len = [1.0, 0.5, 0.25, 0.125]
 
-	vertices = np.loadtxt('tests/meshes/3d/cube_hierarchy/vertices0.txt')
-	tets = np.loadtxt('tests/meshes/3d/cube_hierarchy/tets0.txt', dtype='int')
+	# vertices = np.loadtxt('tests/meshes/3d/cube_hierarchy/vertices0.txt')
+	# tets = np.loadtxt('tests/meshes/3d/cube_hierarchy/tets0.txt', dtype='int')
+
+	verts = np.loadtxt('tests/meshes/testMesh2/vertices.txt')
+	tets = np.loadtxt('tests/meshes/testMesh2/tets.txt', dtype='int')
+	tets = [tets]
 
 	# Choosing only the 25th tetrahedron
-	verts = []
-	element = tets[25]
-	tets = [[0, 1, 2, 3]]
-	for i in element:
-		verts.append(vertices[i])
+	# verts = []
+	# element = tets[25]
+	# tets = [[0, 1, 2, 3]]
+	# for i in element:
+	# 	verts.append(vertices[i])
 
 
 	# Creating DECAGT objects
@@ -50,10 +54,10 @@ def test1():
 	for n in range(1, 21):
 		
 		error = 0.0
-		error = fem.bb_error(n, fem.simplices, fem.vertices, fem.num_simplices, 4)
-		errors.append(error)
+		error = fem.bb_error_1(n, fem.simplices, fem.vertices, fem.num_simplices, 4)
+		# errors.append(error)
 
-		print("For Polynomial of Degree " + str(n))
+		# print("For Polynomial of Degree " + str(n))
 		print("error: " + str(error))
 
 	return np.arange(1, 21, 1), errors
@@ -83,7 +87,7 @@ def test2(degree_analytical):
 			fem = decagt.FiniteElementExteriorCalculus(sc)
 			
 			error = 0.0
-			error = fem.bb_error(n, sc.simplices, sc.vertices, sc.num_simplices, 4)
+			error = fem.bb_error(n, sc.simplices, sc.vertices, sc.num_simplices, 8)
 			errors.append(error)
 
 			print("For mesh " + str(j+1))
@@ -135,7 +139,7 @@ def test3():
 
 
 x, y = test1()
-plot(x, y, "error", "Degree of Polynomial", "Test 1")
+# plot(x, y, "error", "Degree of Polynomial", "Test 1")
 
 # x, y = test2(0)
 
