@@ -21,11 +21,11 @@ int main (int argc, char const *argv[]) {
 	// std::cout<<M<<"\n\n";
 
 	for (int i = 0; i < 11; ++i) {
-		error = fem.bb_error_1(i,
-							   sc.simplices,
-							   sc.vertices,
-							   sc.num_simplices,
-							   4);
+		error = fem.bb_error_H_1(i,
+							     sc.simplices,
+							     sc.vertices,
+							     sc.num_simplices,
+							     4);
 
 		std::cout<<error<<"\n";
 	}

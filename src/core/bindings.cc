@@ -58,7 +58,7 @@ PYBIND11_MODULE(decagt, m) {
 		.def("compute_hodge_stars", &FiniteElementExteriorCalculus::compute_hodge_stars, py::call_guard<py::gil_scoped_release>())
         .def("compute_hodge_star_k", &FiniteElementExteriorCalculus::compute_hodge_star_k, py::call_guard<py::gil_scoped_release>())
 		.def("set_hodge_stars_to_null", &FiniteElementExteriorCalculus::set_hodge_stars_to_null, py::call_guard<py::gil_scoped_release>())
-        .def("mass_matrix_bb_1", &FiniteElementExteriorCalculus::mass_matrix_bb_1, py::call_guard<py::gil_scoped_release>())
+        .def("bb_mass_matrix_H_1", &FiniteElementExteriorCalculus::bb_mass_matrix_H_1, py::call_guard<py::gil_scoped_release>())
         .def("bb_mass_matrix_H_curl", &FiniteElementExteriorCalculus::bb_mass_matrix_H_curl, py::call_guard<py::gil_scoped_release>())
         .def("M_alpha_beta", &FiniteElementExteriorCalculus::M_alpha_beta, py::call_guard<py::gil_scoped_release>())
         .def("S_n", &FiniteElementExteriorCalculus::S_n, py::call_guard<py::gil_scoped_release>())
@@ -70,9 +70,9 @@ PYBIND11_MODULE(decagt, m) {
         .def("compute_index_sets_o", &FiniteElementExteriorCalculus::compute_index_sets_o, py::call_guard<py::gil_scoped_release>())
         .def("compute_index_sets_t", &FiniteElementExteriorCalculus::compute_index_sets_t, py::call_guard<py::gil_scoped_release>())
         .def("compute_index_sets_p", &FiniteElementExteriorCalculus::compute_index_sets_p, py::call_guard<py::gil_scoped_release>())
-        .def("bb_error", &FiniteElementExteriorCalculus::bb_error, py::call_guard<py::gil_scoped_release>())
-        .def("bb_error_1", &FiniteElementExteriorCalculus::bb_error_1, py::call_guard<py::gil_scoped_release>())
-        .def("bb_error_1_1d_quad", &FiniteElementExteriorCalculus::bb_error_1_1d_quad, py::call_guard<py::gil_scoped_release>())
+        .def("bb_error_H_1", &FiniteElementExteriorCalculus::bb_error_H_1, py::call_guard<py::gil_scoped_release>())
+        .def("bb_error_H_curl", &FiniteElementExteriorCalculus::bb_error_H_curl, py::call_guard<py::gil_scoped_release>())
+        .def("bb_error_H_curl_1d_quad", &FiniteElementExteriorCalculus::bb_error_H_curl_1d_quad, py::call_guard<py::gil_scoped_release>())
         .def_readonly("hodge_stars", &FiniteElementExteriorCalculus::hodge_stars)
         .def_readonly("all_hodge_stars", &FiniteElementExteriorCalculus::all_hodge_stars);
 

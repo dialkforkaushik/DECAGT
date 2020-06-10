@@ -31,19 +31,15 @@ def test1():
 	#max edge length for 3d cube meshes (hardcoded for faster computation)
 	edge_len = [1.0, 0.5, 0.25, 0.125]
 
-	# vertices = np.loadtxt('tests/meshes/3d/cube_hierarchy/vertices0.txt')
-	# tets = np.loadtxt('tests/meshes/3d/cube_hierarchy/tets0.txt', dtype='int')
-
-	verts = np.loadtxt('tests/meshes/testMesh2/vertices.txt')
-	tets = np.loadtxt('tests/meshes/testMesh2/tets.txt', dtype='int')
-	tets = [tets]
+	vertices = np.loadtxt('tests/meshes/3d/cube_hierarchy/vertices0.txt')
+	tets = np.loadtxt('tests/meshes/3d/cube_hierarchy/tets0.txt', dtype='int')
 
 	# Choosing only the 25th tetrahedron
-	# verts = []
-	# element = tets[25]
-	# tets = [[0, 1, 2, 3]]
-	# for i in element:
-	# 	verts.append(vertices[i])
+	verts = []
+	element = tets[24]
+	tets = [[0, 1, 2, 3]]
+	for i in element:
+		verts.append(vertices[i])
 
 
 	# Creating DECAGT objects
@@ -54,7 +50,7 @@ def test1():
 	for n in range(1, 21):
 		
 		error = 0.0
-		error = fem.bb_error_1(n, fem.simplices, fem.vertices, fem.num_simplices, 4)
+		error = fem.bb_error_H_1(n, fem.simplices, fem.vertices, fem.num_simplices, 4)
 		# errors.append(error)
 
 		# print("For Polynomial of Degree " + str(n))
@@ -87,7 +83,7 @@ def test2(degree_analytical):
 			fem = decagt.FiniteElementExteriorCalculus(sc)
 			
 			error = 0.0
-			error = fem.bb_error(n, sc.simplices, sc.vertices, sc.num_simplices, 8)
+			error = fem.bb_error_H_1(n, sc.simplices, sc.vertices, sc.num_simplices, 8)
 			errors.append(error)
 
 			print("For mesh " + str(j+1))
@@ -126,7 +122,7 @@ def test3():
 		for q in range(1, 11):
 		
 			# error = 0.0
-			error = fem.bb_error(n, fem.simplices, fem.vertices, fem.num_simplices, q)
+			error = fem.bb_error_H_1(n, fem.simplices, fem.vertices, fem.num_simplices, q)
 			errors.append(error)
 
 			print("Polynomial Degree:", n)

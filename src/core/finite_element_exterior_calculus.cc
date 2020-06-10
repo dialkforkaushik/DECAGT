@@ -1637,30 +1637,31 @@ int FiniteElementExteriorCalculus::bb_mass_matrix_H_curl(DenMatD &mass_matrix,
 
 
 
-int FiniteElementExteriorCalculus::mass_matrix_bb_1(DenMatD &mass_matrix,
-													int n,
-													int m,
-													int d) {
+int FiniteElementExteriorCalculus::bb_mass_matrix_H_1(DenMatD &mass_matrix,
+													  int n,
+													  int m,
+													  Vector2I &index_sets,
+													  int d) {
 
 	int max = std::max(n, m);
 
-	if (max < 1) {
+	if (max < 0) {
 		return FAILURE;
 	}
 
-	Vector2I index_sets;
-	Vector2I temp_index_sets;
-	compute_index_sets_o(index_sets,
-						 1,
-						 1);
+	// Vector2I index_sets;
+	// Vector2I temp_index_sets;
+	// compute_index_sets_o(index_sets,
+	// 					 1,
+	// 					 1);
 
-	for (int i = 2; i <= std::min(max, d+1); ++i) {
-		temp_index_sets.clear();
-		compute_index_sets_o(temp_index_sets,
-							  max,
-							  i);
-		index_sets.insert(index_sets.end(), temp_index_sets.begin(), temp_index_sets.end());
-	}
+	// for (int i = 2; i <= std::min(max, d+1); ++i) {
+	// 	temp_index_sets.clear();
+	// 	compute_index_sets_o(temp_index_sets,
+	// 						  max,
+	// 						  i);
+	// 	index_sets.insert(index_sets.end(), temp_index_sets.begin(), temp_index_sets.end());
+	// }
 
 	size_t size = index_sets.size();
 	mass_matrix.resize(size, size);
@@ -1699,11 +1700,11 @@ int FiniteElementExteriorCalculus::mass_matrix_bb_1(DenMatD &mass_matrix,
 	return SUCCESS;	
 }
 
-double FiniteElementExteriorCalculus::bb_error_1_1d_quad(int n,
-													     Vector3I &simplices,
-														 Vector2D &vertices,
-														 VectorI &num_simplices,
-														 int q_order) {
+double FiniteElementExteriorCalculus::bb_error_H_curl_1d_quad(int n,
+														      Vector3I &simplices,
+															  Vector2D &vertices,
+															  VectorI &num_simplices,
+															  int q_order) {
 
 	size_t N = num_simplices.size();
 	double E = 0.0;
@@ -1874,11 +1875,11 @@ double FiniteElementExteriorCalculus::bb_error_1_1d_quad(int n,
 }
 
 
-double FiniteElementExteriorCalculus::bb_error(int n,
-											    Vector3I &simplices,
-												Vector2D &vertices,
-												VectorI &num_simplices,
-												int q_order) {
+double FiniteElementExteriorCalculus::bb_error_H_1(int n,
+											       Vector3I &simplices,
+												   Vector2D &vertices,
+												   VectorI &num_simplices,
+												   int q_order) {
 
 	size_t N = num_simplices.size();
 	double E = 0.0;
@@ -1891,6 +1892,8 @@ double FiniteElementExteriorCalculus::bb_error(int n,
 					 weights,
 					 data);
 	size_t nodes_size = nodes.size();
+
+	double sum_weights = std::accumulate(weights.begin(), weights.end(), 0.0);
 
 	Vector2I alpha;
 	Vector2I temp_alpha;
@@ -1931,6 +1934,12 @@ double FiniteElementExteriorCalculus::bb_error(int n,
 		basis_elements.row(i) = temp_basis_elements;
 	}
 
+	DenMatD M;
+	bb_mass_matrix_H_1(M,
+					   n,
+					   n,
+					   alpha);
+
 	#ifdef MULTICORE
 		#pragma omp parallel for
 	#endif
@@ -1943,20 +1952,13 @@ double FiniteElementExteriorCalculus::bb_error(int n,
 		}
 		double vol = get_simplex_volume(pts);
 
-		DenMatD M;
-		mass_matrix_bb_1(M,
-						 n,
-						 n);
-		M = M * vol;
-
-		double sum_weight = 0.0;
+		DenMatD temp_M = M * vol;
 
 		for(size_t node_index = 0; node_index < nodes_size; ++node_index) {
 			EigVectorD b(alpha_size);
 
 			for(size_t j = 0; j < alpha_size; ++j) {
 				double inner_product = 0.0;
-				double sum_weights = 0.0;
 
 				for(size_t k = 0; k < nodes_size; ++k) {
 					VectorD vec(embed_dim, 0.0);
@@ -1967,14 +1969,13 @@ double FiniteElementExteriorCalculus::bb_error(int n,
 						}
 					}
 
-					sum_weights += weights[k];
 					inner_product += vol * weights[k] * get_analytical_soln(vec) * basis_elements.coeffRef(j, k);
 				}
 
 				b.coeffRef(j) = inner_product/sum_weights;
 			}
 
-			EigVectorD coeffs = M.llt().solve(b);
+			EigVectorD coeffs = temp_M.llt().solve(b);
 
 			double f_dash = coeffs.dot(basis_elements.col(node_index));
 			
@@ -1986,13 +1987,12 @@ double FiniteElementExteriorCalculus::bb_error(int n,
 			}
 
 			e += weights[node_index] * pow(get_analytical_soln(points) - f_dash, 2);
-			sum_weight += weights[node_index];
 		}
 
 		#ifdef MULTICORE
 			#pragma omp critical
 		#endif
-		E += vol*e/sum_weight;
+		E += vol*e/sum_weights;
 	}
 
 	E = sqrt(E);
@@ -2000,11 +2000,11 @@ double FiniteElementExteriorCalculus::bb_error(int n,
 }
 
 
-double FiniteElementExteriorCalculus::bb_error_1(int n,
-											    Vector3I &simplices,
-												Vector2D &vertices,
-												VectorI &num_simplices,
-												int q_order) {
+double FiniteElementExteriorCalculus::bb_error_H_curl(int n,
+												   	  Vector3I &simplices,
+												   	  Vector2D &vertices,
+												      VectorI &num_simplices,
+												      int q_order) {
 
 	size_t N = num_simplices.size();
 	double E = 0.0;

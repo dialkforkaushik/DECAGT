@@ -29,10 +29,11 @@ class FiniteElementExteriorCalculus: public GeometryComplex {
 
     int set_hodge_stars_to_null();
 
-    int mass_matrix_bb_1(DenMatD &mass_matrix,
-    					 int n, 
-    					 int m,
-    					 int d = 3);
+    int bb_mass_matrix_H_1(DenMatD &mass_matrix,
+    					   int n, 
+    					   int m,
+    					   Vector2I &index_sets,
+    					   int d = 3);
 
     int bb_mass_matrix_H_curl(DenMatD &mass_matrix,
     						  Vector2D &pts,
@@ -92,23 +93,23 @@ class FiniteElementExteriorCalculus: public GeometryComplex {
 				   			 int dim,
 				   			 int d = 3);
 
-    double bb_error(int n,
-				    Vector3I &simplices,
-					Vector2D &vertices,
-					VectorI &num_simplices,
-					int q_order = 4);
+    double bb_error_H_1(int n,
+				    	Vector3I &simplices,
+						Vector2D &vertices,
+						VectorI &num_simplices,
+						int q_order = 4);
 
-    double bb_error_1(int n,
-				      Vector3I &simplices,
-					  Vector2D &vertices,
-					  VectorI &num_simplices,
-					  int q_order = 4);
+    double bb_error_H_curl(int n,
+				      	   Vector3I &simplices,
+					  	   Vector2D &vertices,
+						   VectorI &num_simplices,
+						   int q_order = 4);
 
-    double bb_error_1_1d_quad(int n,
-						       Vector3I &simplices,
-							   Vector2D &vertices,
-							   VectorI &num_simplices,
-							   int q_order = 4);
+    double bb_error_H_curl_1d_quad(int n,
+							       Vector3I &simplices,
+								   Vector2D &vertices,
+								   VectorI &num_simplices,
+								   int q_order = 4);
 };
 
 #endif
