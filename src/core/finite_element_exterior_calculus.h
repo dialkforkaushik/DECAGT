@@ -36,7 +36,9 @@ class FiniteElementExteriorCalculus: public GeometryComplex {
 
     int bb_mass_matrix_H_curl(DenMatD &mass_matrix,
     						  Vector2D &pts,
-							  int n);
+							  int n,
+							  Vector2I &alpha,
+							  VectorI &ordered_basis_sizes);
 
     int M_alpha_beta(double &M,
 			  		VectorI &alpha,

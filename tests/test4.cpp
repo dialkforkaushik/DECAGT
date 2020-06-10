@@ -20,7 +20,7 @@ int main (int argc, char const *argv[]) {
 	// fem.bb_mass_matrix_H_curl(M,U,1);
 	// std::cout<<M<<"\n\n";
 
-	for (int i = 0; i < 21; ++i) {
+	for (int i = 0; i < 11; ++i) {
 		error = fem.bb_error_1(i,
 							   sc.simplices,
 							   sc.vertices,

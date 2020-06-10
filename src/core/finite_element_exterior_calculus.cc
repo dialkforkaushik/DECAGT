@@ -928,87 +928,85 @@ int FiniteElementExteriorCalculus::S_n(DenMatD &S,
 
 int FiniteElementExteriorCalculus::bb_mass_matrix_H_curl(DenMatD &mass_matrix,
 													    Vector2D &pts,
-													    int n) {
+													    int n,
+													    Vector2I &alpha,
+													    VectorI &ordered_basis_sizes) {
 
 	if (n < 0) {
 		return FAILURE;
 	}
 
-	Vector2I alpha;
-	Vector2I temp_alpha;
-	VectorI ordered_basis_sizes;
 	Vector2I e;
-
 	compute_index_sets_o(e,
 						 1,
 						 1);
 
-	compute_index_sets_o(alpha,
-						 2,
-						 2);
-	ordered_basis_sizes.push_back(alpha.size());
+	// compute_index_sets_o(alpha,
+	// 					 2,
+	// 					 2);
+	// ordered_basis_sizes.push_back(alpha.size());
 
-	size_t total = alpha.size();
-	for (int i = 2; i <= 4; ++i) {
-		temp_alpha.clear();
-		compute_index_sets_o(temp_alpha,
-							 n + 1,
-							 i);
+	// size_t total = alpha.size();
+	// for (int i = 2; i <= 4; ++i) {
+	// 	temp_alpha.clear();
+	// 	compute_index_sets_o(temp_alpha,
+	// 						 n + 1,
+	// 						 i);
 		
-		size_t temp_alpha_size = temp_alpha.size();
-		if (temp_alpha_size != 0) {
-			alpha.insert(alpha.end(), temp_alpha.begin(), temp_alpha.end());
-		}
-		ordered_basis_sizes.push_back(total + temp_alpha_size);
-		total += temp_alpha_size;
+	// 	size_t temp_alpha_size = temp_alpha.size();
+	// 	if (temp_alpha_size != 0) {
+	// 		alpha.insert(alpha.end(), temp_alpha.begin(), temp_alpha.end());
+	// 	}
+	// 	ordered_basis_sizes.push_back(total + temp_alpha_size);
+	// 	total += temp_alpha_size;
 			
-		if (i == 3) {
-			temp_alpha.clear();
-			compute_index_sets_p(temp_alpha,
-								 n,
-								 i);
+	// 	if (i == 3) {
+	// 		temp_alpha.clear();
+	// 		compute_index_sets_p(temp_alpha,
+	// 							 n,
+	// 							 i);
 			
-			size_t temp_alpha_size = temp_alpha.size();
-			if (temp_alpha_size != 0) {
-				alpha.insert(alpha.end(), temp_alpha.begin(), temp_alpha.end());
-			}
-			ordered_basis_sizes.push_back(total + temp_alpha_size);
-			total += temp_alpha_size;
-		}
+	// 		size_t temp_alpha_size = temp_alpha.size();
+	// 		if (temp_alpha_size != 0) {
+	// 			alpha.insert(alpha.end(), temp_alpha.begin(), temp_alpha.end());
+	// 		}
+	// 		ordered_basis_sizes.push_back(total + temp_alpha_size);
+	// 		total += temp_alpha_size;
+	// 	}
 
-		else if (i == 4) {
-			for (int l = 0; l < 2; ++l) {	
-				temp_alpha.clear();
-				compute_index_sets_o(temp_alpha,
-									 n + 2,
-									 i);
+	// 	else if (i == 4) {
+	// 		for (int l = 0; l < 2; ++l) {	
+	// 			temp_alpha.clear();
+	// 			compute_index_sets_o(temp_alpha,
+	// 								 n + 2,
+	// 								 i);
 				
-				size_t temp_alpha_size = temp_alpha.size();
-				if (temp_alpha_size != 0) {
-					alpha.insert(alpha.end(), temp_alpha.begin(), temp_alpha.end());
-				}
-				ordered_basis_sizes.push_back(total + temp_alpha_size);
-				total += temp_alpha_size;
-			}
+	// 			size_t temp_alpha_size = temp_alpha.size();
+	// 			if (temp_alpha_size != 0) {
+	// 				alpha.insert(alpha.end(), temp_alpha.begin(), temp_alpha.end());
+	// 			}
+	// 			ordered_basis_sizes.push_back(total + temp_alpha_size);
+	// 			total += temp_alpha_size;
+	// 		}
 
-			temp_alpha.clear();
-			compute_index_sets_o(temp_alpha,
-								 n + 2,
-								 i);
+	// 		temp_alpha.clear();
+	// 		compute_index_sets_o(temp_alpha,
+	// 							 n + 2,
+	// 							 i);
 			
-			size_t temp_alpha_size = temp_alpha.size();
+	// 		size_t temp_alpha_size = temp_alpha.size();
 
-			int counter = 0; 
-			for (size_t j = 0; j < temp_alpha_size; ++j) {
-				if (temp_alpha[j][2] == 1) {
-					alpha.push_back(temp_alpha[j]);
-					++counter;
-				}
-			}
+	// 		int counter = 0; 
+	// 		for (size_t j = 0; j < temp_alpha_size; ++j) {
+	// 			if (temp_alpha[j][2] == 1) {
+	// 				alpha.push_back(temp_alpha[j]);
+	// 				++counter;
+	// 			}
+	// 		}
 
-			ordered_basis_sizes.push_back(total + counter);	
-		}
-	}
+	// 		ordered_basis_sizes.push_back(total + counter);	
+	// 	}
+	// }
 
 	size_t size = alpha.size();
 	mass_matrix.resize(size, size);
@@ -1638,6 +1636,7 @@ int FiniteElementExteriorCalculus::bb_mass_matrix_H_curl(DenMatD &mass_matrix,
 }
 
 
+
 int FiniteElementExteriorCalculus::mass_matrix_bb_1(DenMatD &mass_matrix,
 													int n,
 													int m,
@@ -2019,6 +2018,8 @@ double FiniteElementExteriorCalculus::bb_error_1(int n,
 					 data);
 	size_t nodes_size = nodes.size();
 
+	double sum_weights = std::accumulate(weights.begin(), weights.end(), 0.0);
+
 	Vector2I alpha;
 	Vector2I temp_alpha;
 	VectorI ordered_basis_sizes;
@@ -2079,7 +2080,7 @@ double FiniteElementExteriorCalculus::bb_error_1(int n,
 			
 			size_t temp_alpha_size = temp_alpha.size();
 
-			int counter = 0; 
+			size_t counter = 0; 
 			for (size_t j = 0; j < temp_alpha_size; ++j) {
 				if (temp_alpha[j][2] == 1) {
 					alpha.push_back(temp_alpha[j]);
@@ -2226,17 +2227,15 @@ double FiniteElementExteriorCalculus::bb_error_1(int n,
 		DenMatD M;
 		bb_mass_matrix_H_curl(M,
 							  pts,
-						 	  n);
-		// M = M * vol;
-
-		double sum_weight = 0.0;
+						 	  n,
+						 	  alpha,
+						 	  ordered_basis_sizes);
 
 		for(size_t node_index = 0; node_index < nodes_size; ++node_index) {
 			EigVectorD b(alpha_size);
 
 			for(size_t j = 0; j < alpha_size; ++j) {
 				double inner_product = 0.0;
-				double sum_weights = 0.0;
 
 				for(size_t k = 0; k < nodes_size; ++k) {
 					VectorD vec(embed_dim, 0.0);
@@ -2247,7 +2246,6 @@ double FiniteElementExteriorCalculus::bb_error_1(int n,
 						}
 					}
 
-					sum_weights += weights[k];
 					VectorD temp_vec;
 					get_analytical_soln_vec(temp_vec,
 											vec);
@@ -2284,13 +2282,12 @@ double FiniteElementExteriorCalculus::bb_error_1(int n,
 			}
 
 			e += weights[node_index] * pow((f - f_dash).norm(), 2);
-			sum_weight += weights[node_index];
 		}
 
 		#ifdef MULTICORE
 			#pragma omp critical
 		#endif
-		E += vol*e/sum_weight;
+		E += vol*e/sum_weights;
 	}
 
 	E = sqrt(E);
