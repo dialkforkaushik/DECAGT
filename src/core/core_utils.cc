@@ -1204,6 +1204,15 @@ int print_vector(VectorD &vec) {
     return SUCCESS;
 }
 
+int print_vector(VectorDenMatD &vec) {
+    for (int i = 0; i < vec.size(); ++i)
+        std::cout << vec[i] << " ";
+
+    std::cout << std::endl << std::flush;
+
+    return SUCCESS;
+}
+
 int print_vector(VectorI &vec) {
     for (int i = 0; i < vec.size(); ++i)
         std::cout << vec[i] << " ";

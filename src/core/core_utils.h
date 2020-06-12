@@ -122,6 +122,8 @@ int print_vector(Vector3D &vec);
 
 int print_vector(VectorD &vec);
 
+int print_vector(VectorDenMatD &vec);
+
 int print_vector(VectorI &vec);
 
 int print_vector(VectorMap3I &vec);

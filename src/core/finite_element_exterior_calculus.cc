@@ -1975,7 +1975,7 @@ double FiniteElementExteriorCalculus::bb_error_H_1(int n,
 				b.coeffRef(j) = inner_product/sum_weights;
 			}
 
-			EigVectorD coeffs = temp_M.llt().solve(b);
+			EigVectorD coeffs = temp_M.colPivHouseholderQr().solve(b);
 
 			double f_dash = coeffs.dot(basis_elements.col(node_index));
 			
@@ -2259,12 +2259,18 @@ double FiniteElementExteriorCalculus::bb_error_H_curl(int n,
 				b.coeffRef(j) = inner_product/sum_weights;
 			}
 
-			EigVectorD coeffs = M.llt().solve(b);
+			// std::cout<<"b\n"<<b;
+
+			EigVectorD coeffs = M.colPivHouseholderQr().solve(b);
+
+			// std::cout<<"coeffs\n"<<coeffs;
 
 			EigVectorD f_dash = EigVectorD::Zero(embed_dim);
 			for (size_t j = 0; j < alpha_size; ++j) {
 				f_dash += coeffs.coeffRef(j) * basis_elements[j].row(node_index);
 			}
+
+			// std::cout<<"f_dash\n"<<f_dash;
 
 			VectorD points(embed_dim, 0.0);
 			for(size_t v = 0; v < N; ++v) {
