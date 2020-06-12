@@ -12,9 +12,9 @@ int main (int argc, char const *argv[]) {
 
 	FiniteElementExteriorCalculus fem(sc);
 
-	for(int i = 0; i < 4; ++i) {
-		U.push_back(sc.vertices[i]);
-	}
+	// for(int i = 0; i < 4; ++i) {
+	// 	U.push_back(sc.vertices[i]);
+	// }
 
 	// DenMatD M;
 	// fem.bb_mass_matrix_H_curl(M,U,1);
@@ -25,7 +25,7 @@ int main (int argc, char const *argv[]) {
 							     sc.simplices,
 							     sc.vertices,
 							     sc.num_simplices,
-							     i);
+							     i*2);
 
 		std::cout<<error<<"\n";
 	}

@@ -1706,6 +1706,10 @@ double FiniteElementExteriorCalculus::bb_error_H_curl_1d_quad(int n,
 															  VectorI &num_simplices,
 															  int q_order) {
 
+	#ifdef PYTHON
+		pybind11::gil_scoped_acquire acquire;
+	#endif
+
 	size_t N = num_simplices.size();
 	double E = 0.0;
 	size_t embed_dim = vertices[0].size();
@@ -1881,6 +1885,10 @@ double FiniteElementExteriorCalculus::bb_error_H_1(int n,
 												   VectorI &num_simplices,
 												   int q_order) {
 
+	#ifdef PYTHON
+		pybind11::gil_scoped_acquire acquire;
+	#endif
+
 	size_t N = num_simplices.size();
 	double E = 0.0;
 	size_t embed_dim = vertices[0].size();
@@ -2005,6 +2013,10 @@ double FiniteElementExteriorCalculus::bb_error_H_curl(int n,
 												   	  Vector2D &vertices,
 												      VectorI &num_simplices,
 												      int q_order) {
+
+	#ifdef PYTHON
+		pybind11::gil_scoped_acquire acquire;
+	#endif
 
 	size_t N = num_simplices.size();
 	double E = 0.0;

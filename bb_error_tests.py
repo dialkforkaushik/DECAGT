@@ -47,18 +47,18 @@ def test1():
 	fem = decagt.FiniteElementExteriorCalculus(sc)
 
 	# Looping over Bernstein_Bezier Polynomial degrees (n = degree)
-	for n in range(1, 21):
+	for n in range(1, 11):
 		
 		start_time = time.time()
 		error = 0.0
-		error = fem.bb_error_H_1(n, fem.simplices, fem.vertices, fem.num_simplices, 4)
+		error = fem.bb_error_H_1(n, fem.simplices, fem.vertices, fem.num_simplices, n)
 		print("--- %s seconds ---" % (time.time() - start_time))
 		errors.append(error)
 
 		# print("For Polynomial of Degree " + str(n))
 		print("error: " + str(error))
 
-	return np.arange(1, 21, 1), errors
+	return np.arange(1, 11, 1), errors
 
 
 def test2(degree_analytical):
@@ -85,7 +85,7 @@ def test2(degree_analytical):
 			fem = decagt.FiniteElementExteriorCalculus(sc)
 			
 			error = 0.0
-			error = fem.bb_error_H_1(n, sc.simplices, sc.vertices, sc.num_simplices, 4)
+			error = fem.bb_error_H_1(n, sc.simplices, sc.vertices, sc.num_simplices, 5)
 			errors.append(error)
 
 			print("For mesh " + str(j+1))
@@ -136,10 +136,10 @@ def test3():
 	return np.arange(1, 11, 1), errors
 
 
-# x, y = test1()
+x, y = test1()
 # plot(x, y, "error", "Degree of Polynomial", "Test 1")
 
-x, y = test2(3)
+# x, y = test2(0)
 
 # x, y = test3()
 
