@@ -4,8 +4,13 @@
 #include <vector>
 
 int main (int argc, char const *argv[]) {
-	VectorD f {1,2,3};
-	std::cout<<get_analytical_soln(f);
+	VectorD f {1.1,2.54,4.3};
+	VectorD g;
+	get_analytical_soln_vec(g,
+							f);
+
+	print_vector(g);
+	std::cout<<g[0];
 
 	return 0;
 }

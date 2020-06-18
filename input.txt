@@ -1,2 +1,2 @@
-tests/meshes/testMesh2/vertices.txt
-tests/meshes/testMesh2/tets.txt
+tests/meshes/testMesh3/vertices.txt
+tests/meshes/testMesh3/tets.txt

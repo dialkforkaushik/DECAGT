@@ -110,6 +110,10 @@ class FiniteElementExteriorCalculus: public GeometryComplex {
 								   Vector2D &vertices,
 								   VectorI &num_simplices,
 								   int q_order = 4);
+
+    int test_basis_functions(int n);
+    double test_mass_matrix(int n,
+    					 int q_order = 4);
 };
 
 #endif
