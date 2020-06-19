@@ -230,12 +230,6 @@ int FiniteElementExteriorCalculus::grad_B(EigVectorD &grad_b,
 				  n - 1,
 				  bary_coords);
 
-		// std::cout<<"c\n"<<c<<"\n";
-		// std::cout<<"B\n"<<B<<"\n";
-
-		// print_vector(temp_alpha);
-		// print_vector(bary_coords);
-
 		grad_b += c * B;
 	}
 
@@ -273,10 +267,7 @@ int FiniteElementExteriorCalculus::bernstein(double &bernstein_poly,
 	for(size_t i = 0; i < size; ++i) {
 		long long fact = alpha[i];
 		factorial(fact);
-		// std::cout<<"fact"<<fact<<"\n";
-		// std::cout<<pow(bary_coords[i], alpha[i])<<"\n";
 		temp_value *= pow(bary_coords[i], alpha[i])/fact;
-		// std::cout<<"temp value: "<<temp_value<<"\n";
 	}
 
 	int sum = std::accumulate(alpha.begin(), alpha.end(), 0);
@@ -287,10 +278,6 @@ int FiniteElementExteriorCalculus::bernstein(double &bernstein_poly,
 	factorial(den);
 
 	bernstein_poly = (num/den) * temp_value;
-
-	// std::cout<<"num: "<<num<<"\n";
-	// std::cout<<"den: "<<den<<"\n";
-	// std::cout<<"temp_value: "<<temp_value<<"\n";
 
 	return SUCCESS;
 }
@@ -481,18 +468,18 @@ int get_triplets(Vector3I &simplex_simplices,
 }
 
 
-int FiniteElementExteriorCalculus::set_hodge_stars_to_null() {
+int FiniteElementExteriorCalculus::set_mass_matrices_to_null() {
 
     for (int i = 0; i < num_simplices[complex_dimension]; ++i) {
     	auto x = std::numeric_limits<SpMatD>::quiet_NaN();
-    	hodge_stars.push_back(x);
+    	mass_matrices.push_back(x);
     }
 
     return SUCCESS;
 }
 
 
-int FiniteElementExteriorCalculus::compute_hodge_star_k(int &k) {
+int FiniteElementExteriorCalculus::compute_mass_matrix_k(int &k) {
 	#ifdef PYTHON
 		pybind11::gil_scoped_acquire acquire;
 	#endif
@@ -676,14 +663,14 @@ int FiniteElementExteriorCalculus::compute_hodge_star_k(int &k) {
 	mass_matrix.setFromTriplets(triplet.begin(), triplet.end());
 
 	mass_matrix.makeCompressed();
-	hodge_stars[k] = mass_matrix;
+	mass_matrices[k] = mass_matrix;
 
 
 	return SUCCESS;
 }
 
 
-int FiniteElementExteriorCalculus::compute_hodge_stars() {
+int FiniteElementExteriorCalculus::compute_mass_matrices() {
 	#ifdef PYTHON
 		pybind11::gil_scoped_acquire acquire;
 	#endif
@@ -869,7 +856,7 @@ int FiniteElementExteriorCalculus::compute_hodge_stars() {
 		mass_matrix.setFromTriplets(triplet.begin(), triplet.end());
 
 		mass_matrix.makeCompressed();
-		hodge_stars[k] = mass_matrix;
+		mass_matrices[k] = mass_matrix;
 
 	}
 
@@ -1040,13 +1027,11 @@ int FiniteElementExteriorCalculus::bb_mass_matrix_H_curl(DenMatD &mass_matrix,
 	for (size_t i = 0; i < size; ++i) {
 		for (size_t j = i; j < size; ++j) {
 
-			// std::cout<<"i: "<<i<<" j: "<<j<<"\n";
 			double x = 0;
 			
 			// 33a
 			if (i < ordered_basis_sizes[0] && j < ordered_basis_sizes[0]) {
 
-				// std::cout<<"in 33a\n";
 				x = 0;
 
 				VectorI index_p;
@@ -1095,7 +1080,6 @@ int FiniteElementExteriorCalculus::bb_mass_matrix_H_curl(DenMatD &mass_matrix,
 				   (j >= ordered_basis_sizes[1] && j < ordered_basis_sizes[2]) || 
 				   (j >= ordered_basis_sizes[3] && j < ordered_basis_sizes[4]))) {
 				
-				// std::cout<<"in 33b\n";
 				x = 0;
 				for (int s = 0; s < 4; ++s) {
 					VectorI vec = alpha[j];
@@ -1105,18 +1089,6 @@ int FiniteElementExteriorCalculus::bb_mass_matrix_H_curl(DenMatD &mass_matrix,
 					if (vec[s] < 0) {
 						flag = true;
 					}
-					// VectorI vec;
-					// std::transform(alpha[j].begin(), alpha[j].end(), e[s].begin(),
-					// 				std::back_inserter(vec),
-					// 				std::minus<int>());
-					
-					// bool flag = false;
-					// for (int k = 0; k < 4; ++k) {
-					// 	if (vec[k] < 0) {
-					// 		flag = true;
-					// 		break;
-					// 	}
-					// }
 
 					if (flag) {
 						continue;
@@ -1153,7 +1125,6 @@ int FiniteElementExteriorCalculus::bb_mass_matrix_H_curl(DenMatD &mass_matrix,
 			else if(i < ordered_basis_sizes[0] && 
 				    j >= ordered_basis_sizes[2] && j < ordered_basis_sizes[3]) {
 				
-				// std::cout<<"in 33c\n";
 				x = 0;
 
 				int E_nF_size = ordered_basis_sizes[3] - ordered_basis_sizes[2];
@@ -1185,10 +1156,6 @@ int FiniteElementExteriorCalculus::bb_mass_matrix_H_curl(DenMatD &mass_matrix,
 				}
 
 				for (int k = 0; k < SIGMA_size; ++k) {
-					// VectorI vec;
-					// std::transform(alpha[j].begin(), alpha[j].end(), e[SIGMA[k][0]].begin(),
-					// 					std::back_inserter(vec),
-					// 					std::plus<int>());
 
 					VectorI vec = alpha[j];
 					vec[SIGMA[k][0]] += 1;
@@ -1216,7 +1183,6 @@ int FiniteElementExteriorCalculus::bb_mass_matrix_H_curl(DenMatD &mass_matrix,
 			else if (i < ordered_basis_sizes[0] &&
 					 j >= ordered_basis_sizes[4]) {
 
-				// std::cout<<"in 33d\n";
 				x = 0;
 
 				int l_q;
@@ -1235,19 +1201,6 @@ int FiniteElementExteriorCalculus::bb_mass_matrix_H_curl(DenMatD &mass_matrix,
 					if (s == l_q) {
 						delta = 1;
 					}
-
-					// VectorI vec;
-					// std::transform(alpha[j].begin(), alpha[j].end(), e[s].begin(),
-					// 				std::back_inserter(vec),
-					// 				std::minus<int>());
-					
-					// bool flag = false;
-					// for (int k = 0; k < 4; ++k) {
-					// 	if (vec[k] < 0) {
-					// 		flag = true;
-					// 		break;
-					// 	}
-					// }
 
 					VectorI vec = alpha[j];
 					vec[s] -= 1;
@@ -1294,13 +1247,8 @@ int FiniteElementExteriorCalculus::bb_mass_matrix_H_curl(DenMatD &mass_matrix,
 				   (j >= ordered_basis_sizes[1] && j < ordered_basis_sizes[2]) || 
 				   (j >= ordered_basis_sizes[3] && j < ordered_basis_sizes[4]))) {
 				
-				// std::cout<<"in 33e\n";
 				x = 0;
 				for (int t = 0; t < 4; ++t) {
-					// VectorI vec1;
-					// std::transform(alpha[i].begin(), alpha[i].end(), e[t].begin(),
-					// 					std::back_inserter(vec1),
-					// 					std::minus<int>());
 
 					VectorI vec1 = alpha[i];
 					vec1[t] -= 1;
@@ -1315,18 +1263,6 @@ int FiniteElementExteriorCalculus::bb_mass_matrix_H_curl(DenMatD &mass_matrix,
 					}
 
 					for (int s = 0; s < 4; ++s) {
-						// VectorI vec2;
-						// std::transform(alpha[j].begin(), alpha[j].end(), e[s].begin(),
-						// 				std::back_inserter(vec2),
-						// 				std::minus<int>());
-						
-						// bool flag = false;
-						// for (int k = 0; k < 4; ++k) {
-						// 	if (vec1[k] < 0 || vec2[k] < 0) {
-						// 		flag = true;
-						// 		break;
-						// 	}
-						// }
 
 						VectorI vec2 = alpha[j];
 						vec2[s] -= 1;
@@ -1360,7 +1296,6 @@ int FiniteElementExteriorCalculus::bb_mass_matrix_H_curl(DenMatD &mass_matrix,
 				   (i >= ordered_basis_sizes[3] && i < ordered_basis_sizes[4])) && 
 				   (j >= ordered_basis_sizes[2] && j < ordered_basis_sizes[3])) {
 				
-				// std::cout<<"in 33f\n";
 				x = 0;
 				
 				int E_nF_size = ordered_basis_sizes[3] - ordered_basis_sizes[2];
@@ -1384,18 +1319,6 @@ int FiniteElementExteriorCalculus::bb_mass_matrix_H_curl(DenMatD &mass_matrix,
 				size_t SIGMA_size = SIGMA.size();
 
 				for (int t = 0; t < 4; ++t) {
-					// VectorI vec1;
-					// std::transform(alpha[i].begin(), alpha[i].end(), e[t].begin(),
-					// 					std::back_inserter(vec1),
-					// 					std::minus<int>());
-
-					// bool flag = false;
-					// for (int k = 0; k < 4; ++k) {
-					// 	if (vec1[k] < 0) {
-					// 		flag = true;
-					// 		break;
-					// 	}
-					// }
 
 					VectorI vec1 = alpha[i];
 					vec1[t] -= 1;
@@ -1410,10 +1333,6 @@ int FiniteElementExteriorCalculus::bb_mass_matrix_H_curl(DenMatD &mass_matrix,
 					}
 
 					for (int k = 0; k < SIGMA_size; ++k) {
-						// VectorI vec2;
-						// std::transform(alpha[j].begin(), alpha[j].end(), e[SIGMA[k][0]].begin(),
-						// 					std::back_inserter(vec2),
-						// 					std::plus<int>());
 
 						VectorI vec2 = alpha[j];
 						vec2[SIGMA[k][0]] += 1;
@@ -1440,7 +1359,6 @@ int FiniteElementExteriorCalculus::bb_mass_matrix_H_curl(DenMatD &mass_matrix,
 				   (i >= ordered_basis_sizes[3] && i < ordered_basis_sizes[4])) &&
 				   (j >= ordered_basis_sizes[4])) {
 
-				// std::cout<<"in 33g\n";
 				x = 0;
 
 				int l_q;
@@ -1455,10 +1373,6 @@ int FiniteElementExteriorCalculus::bb_mass_matrix_H_curl(DenMatD &mass_matrix,
 				}
 
 				for (int t = 0; t < 4; ++t) {
-					// VectorI vec1;
-					// std::transform(alpha[i].begin(), alpha[i].end(), e[t].begin(),
-					// 					std::back_inserter(vec1),
-					// 					std::minus<int>());
 
 					VectorI vec1 = alpha[i];
 					vec1[t] -= 1;
@@ -1477,19 +1391,6 @@ int FiniteElementExteriorCalculus::bb_mass_matrix_H_curl(DenMatD &mass_matrix,
 						if (s == l_q) {
 							delta = 1;
 						}
-
-						// VectorI vec2;
-						// std::transform(alpha[j].begin(), alpha[j].end(), e[s].begin(),
-						// 				std::back_inserter(vec2),
-						// 				std::minus<int>());
-						
-						// bool flag = false;
-						// for (int k = 0; k < 4; ++k) {
-						// 	if (vec1[k] < 0 || vec2[k] < 0) {
-						// 		flag = true;
-						// 		break;
-						// 	}
-						// }
 
 						VectorI vec2 = alpha[j];
 						vec2[s] -= 1;
@@ -1521,7 +1422,6 @@ int FiniteElementExteriorCalculus::bb_mass_matrix_H_curl(DenMatD &mass_matrix,
 			else if((i >= ordered_basis_sizes[2] && i < ordered_basis_sizes[3]) &&
 				    (j >= ordered_basis_sizes[2] && j < ordered_basis_sizes[3])) {
 				
-				// std::cout<<"in 33h\n";
 				x = 0;
 				
 				Vector2I SIGMA_p;
@@ -1555,19 +1455,11 @@ int FiniteElementExteriorCalculus::bb_mass_matrix_H_curl(DenMatD &mass_matrix,
 				size_t SIGMA_q_size = SIGMA_q.size();
 
 				for (int t = 0; t < SIGMA_p_size; ++t) {
-					// VectorI vec1;
-					// std::transform(alpha[i].begin(), alpha[i].end(), e[SIGMA_p[t][0]].begin(),
-					// 					std::back_inserter(vec1),
-					// 					std::plus<int>());
 
 					VectorI vec1 = alpha[i];
 					vec1[SIGMA_p[t][0]] += 1;
 
 					for (int s = 0; s < SIGMA_q_size; ++s) {
-						// VectorI vec2;
-						// std::transform(alpha[j].begin(), alpha[j].end(), e[SIGMA_q[s][0]].begin(),
-						// 					std::back_inserter(vec2),
-						// 					std::plus<int>());
 
 						VectorI vec2 = alpha[j];
 						vec2[SIGMA_q[s][0]] += 1;
@@ -1590,7 +1482,6 @@ int FiniteElementExteriorCalculus::bb_mass_matrix_H_curl(DenMatD &mass_matrix,
 			else if((i >= ordered_basis_sizes[2] && i < ordered_basis_sizes[3]) &&
 				    (j >= ordered_basis_sizes[4])) {
 
-				// std::cout<<"in 33i\n";
 				x = 0;
 
 				int l_q;
@@ -1625,10 +1516,6 @@ int FiniteElementExteriorCalculus::bb_mass_matrix_H_curl(DenMatD &mass_matrix,
 				size_t SIGMA_p_size = SIGMA_p.size();
 
 				for (int t = 0; t < SIGMA_p_size; ++t) {
-					// VectorI vec1;
-					// std::transform(alpha[i].begin(), alpha[i].end(), e[SIGMA_p[t][0]].begin(),
-					// 					std::back_inserter(vec1),
-					// 					std::plus<int>());
 
 					VectorI vec1 = alpha[i];
 					vec1[SIGMA_p[t][0]] += 1;
@@ -1638,11 +1525,6 @@ int FiniteElementExteriorCalculus::bb_mass_matrix_H_curl(DenMatD &mass_matrix,
 						if (s == l_q) {
 							delta = 1;
 						}
-
-						// VectorI vec2;
-						// std::transform(alpha[j].begin(), alpha[j].end(), e[s].begin(),
-						// 					std::back_inserter(vec2),
-						// 					std::minus<int>());
 
 						VectorI vec2 = alpha[j];
 						vec2[s] -= 1;
@@ -1672,7 +1554,6 @@ int FiniteElementExteriorCalculus::bb_mass_matrix_H_curl(DenMatD &mass_matrix,
 			else if(i >= ordered_basis_sizes[4] &&
 				    j >= ordered_basis_sizes[4]) {
 
-				// std::cout<<"in 33j\n";
 				x = 0;
 
 				int l_q;
@@ -1702,11 +1583,6 @@ int FiniteElementExteriorCalculus::bb_mass_matrix_H_curl(DenMatD &mass_matrix,
 						delta_t = 1;
 					}
 
-					// VectorI vec1;
-					// std::transform(alpha[i].begin(), alpha[i].end(), e[t].begin(),
-					// 					std::back_inserter(vec1),
-					// 					std::minus<int>());
-
 					VectorI vec1 = alpha[i];
 					vec1[t] -= 1;
 
@@ -1724,19 +1600,6 @@ int FiniteElementExteriorCalculus::bb_mass_matrix_H_curl(DenMatD &mass_matrix,
 						if (l_q == s) {
 							delta_s = 1;
 						}
-						
-						// VectorI vec2;
-						// std::transform(alpha[j].begin(), alpha[j].end(), e[s].begin(),
-						// 				std::back_inserter(vec2),
-						// 				std::minus<int>());
-						
-						// bool flag = false;
-						// for (int k = 0; k < 4; ++k) {
-						// 	if (vec1[k] < 0 || vec2[k] < 0) {
-						// 		flag = true;
-						// 		break;
-						// 	}
-						// }
 
 						VectorI vec2 = alpha[j];
 						vec2[s] -= 1;
@@ -1768,7 +1631,6 @@ int FiniteElementExteriorCalculus::bb_mass_matrix_H_curl(DenMatD &mass_matrix,
 				   (j >= ordered_basis_sizes[3] && j < ordered_basis_sizes[4])) && 
 				   (i >= ordered_basis_sizes[2] && i < ordered_basis_sizes[3])) {
 				
-				// std::cout<<"in 33k\n";
 				x = 0;
 				
 				int E_nF_size = ordered_basis_sizes[3] - ordered_basis_sizes[2];
@@ -1792,18 +1654,6 @@ int FiniteElementExteriorCalculus::bb_mass_matrix_H_curl(DenMatD &mass_matrix,
 				size_t SIGMA_size = SIGMA.size();
 
 				for (int t = 0; t < 4; ++t) {
-					// VectorI vec1;
-					// std::transform(alpha[i].begin(), alpha[i].end(), e[t].begin(),
-					// 					std::back_inserter(vec1),
-					// 					std::minus<int>());
-
-					// bool flag = false;
-					// for (int k = 0; k < 4; ++k) {
-					// 	if (vec1[k] < 0) {
-					// 		flag = true;
-					// 		break;
-					// 	}
-					// }
 
 					VectorI vec1 = alpha[j];
 					vec1[t] -= 1;
@@ -1818,10 +1668,6 @@ int FiniteElementExteriorCalculus::bb_mass_matrix_H_curl(DenMatD &mass_matrix,
 					}
 
 					for (int k = 0; k < SIGMA_size; ++k) {
-						// VectorI vec2;
-						// std::transform(alpha[j].begin(), alpha[j].end(), e[SIGMA[k][0]].begin(),
-						// 					std::back_inserter(vec2),
-						// 					std::plus<int>());
 
 						VectorI vec2 = alpha[i];
 						vec2[SIGMA[k][0]] += 1;
@@ -2454,7 +2300,6 @@ double FiniteElementExteriorCalculus::bb_error_H_curl(int n,
 			basis_elements.push_back(temp_basis_elements);
 		}
 
-		// std::cout<<"mass matrix callled\n";
 		DenMatD M;
 		bb_mass_matrix_H_curl(M,
 							  pts,
@@ -2490,18 +2335,12 @@ double FiniteElementExteriorCalculus::bb_error_H_curl(int n,
 				b.coeffRef(j) = vol * inner_product/sum_weights;
 			}
 
-			// std::cout<<"b\n"<<b;
-
 			EigVectorD coeffs = M.colPivHouseholderQr().solve(b);
-
-			// std::cout<<"\ncoeffs\n"<<coeffs;
 
 			EigVectorD f_dash = EigVectorD::Zero(embed_dim);
 			for (size_t j = 0; j < alpha_size; ++j) {
 				f_dash += coeffs.coeffRef(j) * basis_elements[j].row(node_index);
 			}
-
-			// std::cout<<"f_dash\n"<<f_dash;
 
 			VectorD points(embed_dim, 0.0);
 			for(size_t v = 0; v < N; ++v) {
@@ -2518,9 +2357,6 @@ double FiniteElementExteriorCalculus::bb_error_H_curl(int n,
 				f.coeffRef(v) = temp_vec[v];
 			}
 
-			// std::cout<<"\nf_dash\n"<<f_dash;
-			// std::cout<<"\nf\n"<<f;
-
 			e += weights[node_index] * pow((f - f_dash).norm(), 2);
 		}
 
@@ -2535,570 +2371,16 @@ double FiniteElementExteriorCalculus::bb_error_H_curl(int n,
 }
 
 
-// int FiniteElementExteriorCalculus::test_basis_functions(int n) {
-
-// 	size_t N = num_simplices.size();
-// 	double E = 0.0;
-// 	size_t embed_dim = vertices[0].size();
-
-// 	// Vector2D nodes;
-// 	// VectorD weights;
-// 	// std::string data = "./data/quadrature/d" + std::to_string(N-1) + "o" + std::to_string(q_order) + ".txt";
-// 	// read_quadratures(nodes,
-// 	// 				 weights,
-// 	// 				 data);
-// 	// size_t nodes_size = nodes.size();
-
-// 	// double sum_weights = std::accumulate(weights.begin(), weights.end(), 0.0);
-
-// 	Vector2I alpha;
-// 	Vector2I temp_alpha;
-// 	VectorI ordered_basis_sizes;
-// 	Vector2D basis_vector;
-
-// 	compute_index_sets_o(alpha,
-// 						 2,
-// 						 2);
-// 	ordered_basis_sizes.push_back(alpha.size());
-
-// 	size_t total = alpha.size();
-// 	for (int i = 2; i <= 4; ++i) {
-// 		temp_alpha.clear();
-// 		compute_index_sets_o(temp_alpha,
-// 							 n + 1,
-// 							 i);
-		
-// 		size_t temp_alpha_size = temp_alpha.size();
-// 		if (temp_alpha_size != 0) {
-// 			alpha.insert(alpha.end(), temp_alpha.begin(), temp_alpha.end());
-// 		}
-// 		ordered_basis_sizes.push_back(total + temp_alpha_size);
-// 		total += temp_alpha_size;
-			
-// 		if (i == 3) {
-// 			temp_alpha.clear();
-// 			compute_index_sets_p(temp_alpha,
-// 								 n,
-// 								 i);
-			
-// 			size_t temp_alpha_size = temp_alpha.size();
-// 			if (temp_alpha_size != 0) {
-// 				alpha.insert(alpha.end(), temp_alpha.begin(), temp_alpha.end());
-// 			}
-// 			ordered_basis_sizes.push_back(total + temp_alpha_size);
-// 			total += temp_alpha_size;
-// 		}
-
-// 		else if (i == 4) {
-// 			temp_alpha.clear();
-// 			compute_index_sets_o(temp_alpha,
-// 								 n + 2,
-// 								 i);
-			
-// 			size_t temp_alpha_size = temp_alpha.size();
-
-// 			for (int l = 0; l < 2; ++l) {	
-// 				if (temp_alpha_size != 0) {
-// 					alpha.insert(alpha.end(), temp_alpha.begin(), temp_alpha.end());
-// 				}
-// 				ordered_basis_sizes.push_back(total + temp_alpha_size);
-// 				total += temp_alpha_size;
-// 			}
-
-// 			size_t counter = 0; 
-// 			for (size_t j = 0; j < temp_alpha_size; ++j) {
-// 				if (temp_alpha[j][2] == 1) {
-// 					alpha.push_back(temp_alpha[j]);
-// 					++counter;
-// 				}
-// 			}
-
-// 			ordered_basis_sizes.push_back(total + counter);	
-// 			total += counter;
-// 		}
-// 	}
-
-// 	size_t alpha_size = alpha.size();
-// 	print_vector(alpha);
-
-// 	std::cout<<"Ordered Basis Sizes\n";
-// 	print_vector(ordered_basis_sizes);
-
-// 	Vector2I all_faces;
-// 	compute_index_sets_o(all_faces,
-// 						 3,
-// 						 3);
-// 	Vector2I e;
-// 	compute_index_sets_o(e,
-// 						 1,
-// 						 1);
-
-// 	#ifdef MULTICORE
-// 		#pragma omp parallel for
-// 	#endif
-// 	for(size_t i = 0; i < num_simplices[N-1]; ++i) {
-// 		double e = 0;
-
-// 		Vector2D pts;
-// 		for(size_t k = 0; k < N; ++k) {
-// 			pts.push_back(vertices[simplices[N-1][i][k]]);
-// 		}
-// 		double vol = get_simplex_volume(pts);
-
-// 		DenMatD grad_bary_coords;
-// 		barycentric_gradients(grad_bary_coords,
-// 							  pts);
-
-// 		VectorDenMatD basis_elements;
-// 		for(size_t i = 0; i < alpha_size; ++i) {
-
-// 			VectorI local_indices;
-// 			for (int j = 0; j < 4; ++j) {
-// 				if (alpha[i][j] > 0) {
-// 					local_indices.push_back(j);
-// 				}
-// 			}
-// 			size_t local_indices_size = local_indices.size();
-
-// 			double z = 1;
-// 			z = z/4;
-// 			VectorD nodes {z, z, z, z};
-// 			std::cout<<"\ni: "<<i<<"\n\n";
-			
-// 			if (i < ordered_basis_sizes[0]) {
-// 				EigVectorD omega;
-
-// 				DenMatD temp_grad_bary_coords(local_indices_size, embed_dim);
-// 				VectorD temp_bary_coords;
-
-// 				temp_bary_coords.push_back(1);
-// 				temp_bary_coords.push_back(0);
-// 				for (size_t k = 0; k < local_indices_size; ++k) {
-// 					temp_grad_bary_coords.row(k) = grad_bary_coords.row(local_indices[k]);
-// 				}
-				
-// 				omega_ij(omega,
-// 						 temp_bary_coords,
-// 						 temp_grad_bary_coords);
-				
-// 				std::cout<<"omega\n"<<omega<<"\n";
-// 			}
-// 			else if ((i >= ordered_basis_sizes[0] && i < ordered_basis_sizes[1]) ||
-// 					 (i >= ordered_basis_sizes[1] && i < ordered_basis_sizes[2]) ||
-// 					 (i >= ordered_basis_sizes[3] && i < ordered_basis_sizes[4])) {
-// 				EigVectorD grad_b;
-
-// 				// std::cout<<i<<"\n";
-// 				grad_B(grad_b,
-// 					   alpha[i],
-// 					   n + 1,
-// 					   nodes,
-// 					   grad_bary_coords);
-
-// 				if (i >= ordered_basis_sizes[0] && i < ordered_basis_sizes[1])
-// 					std::cout<<"grad_b(E)\n"<<grad_b<<"\n";
-// 				if (i >= ordered_basis_sizes[1] && i < ordered_basis_sizes[2])
-// 					std::cout<<"grad_b(F)\n"<<grad_b<<"\n";
-// 				if (i >= ordered_basis_sizes[3] && i < ordered_basis_sizes[4])
-// 					std::cout<<"grad_b(T)\n"<<grad_b<<"\n";
-
-// 				// temp_basis_elements.row(j) = grad_b;
-// 			}
-// 			else if (i >= ordered_basis_sizes[2] && i < ordered_basis_sizes[3]) {
-// 				EigVectorD phi;
-
-// 				int E_nF_size = ordered_basis_sizes[3] - ordered_basis_sizes[2];
-// 				int face_index = std::floor((i - ordered_basis_sizes[2])/(E_nF_size/4));
-// 				VectorI face = all_faces[face_index];
-				
-// 				VectorI temp_local_indices;
-
-// 				for (int k = 0; k < 4; ++k) {
-// 					if (face[k] > 0) {
-// 						temp_local_indices.push_back(k);
-// 					}
-// 				}
-
-// 				phi_FT(phi,
-// 					   alpha[i],
-// 					   n,
-// 					   nodes,
-// 					   grad_bary_coords,
-// 					   temp_local_indices);
-
-// 				std::cout<<"phi\n"<<phi<<"\n";
-
-// 			}
-// 			else if (i >= ordered_basis_sizes[4] && i < ordered_basis_sizes[5]) {
-// 				EigVectorD psi;
-
-// 				psi_T(psi,
-// 					   alpha[i],
-// 					   n + 1,
-// 					   0,
-// 					   nodes,
-// 					   grad_bary_coords);
-
-// 				std::cout<<"psi\n"<<psi<<"\n";
-// 			}
-// 			else if (i >= ordered_basis_sizes[5] && i < ordered_basis_sizes[6]) {
-// 				EigVectorD psi;
-
-// 				psi_T(psi,
-// 					   alpha[i],
-// 					   n + 1,
-// 					   1,
-// 					   nodes,
-// 					   grad_bary_coords);
-
-// 				std::cout<<"psi\n"<<psi<<"\n";
-// 			}
-// 			else if (i >= ordered_basis_sizes[6] && i < ordered_basis_sizes[7]) {
-// 				EigVectorD psi;
-
-// 				psi_T(psi,
-// 					   alpha[i],
-// 					   n + 1,
-// 					   2,
-// 					   nodes,
-// 					   grad_bary_coords);
-
-// 				std::cout<<"psi\n"<<psi<<"\n";
-// 			}
-// 		}
-// 	}
-
-// 	return SUCCESS;
-// }
-
-
-// double FiniteElementExteriorCalculus::test_mass_matrix(int n,
-// 												       int q_order) {
-
-// 	#ifdef PYTHON
-// 		pybind11::gil_scoped_acquire acquire;
-// 	#endif
-
-// 	size_t N = num_simplices.size();
-// 	double E = 0.0;
-// 	size_t embed_dim = vertices[0].size();
-
-// 	Vector2D nodes;
-// 	VectorD weights;
-// 	std::string data = "./data/quadrature/d" + std::to_string(N-1) + "o" + std::to_string(q_order) + ".txt";
-// 	read_quadratures(nodes,
-// 					 weights,
-// 					 data);
-// 	size_t nodes_size = nodes.size();
-
-// 	Vector2D bary_coords;
-// 	VectorD weights1;
-// 	std::string data1 = "./data/nodes.txt";
-// 	read_quadratures(bary_coords,
-// 					 weights1,
-// 					 data1);
-// 	size_t bary_coords_size = bary_coords.size();
-
-// 	print_vector(bary_coords);
-
-// 	double sum_weights = std::accumulate(weights.begin(), weights.end(), 0.0);
-
-// 	Vector2I alpha;
-// 	Vector2I temp_alpha;
-// 	VectorI ordered_basis_sizes;
-// 	Vector2D basis_vector;
-
-// 	compute_index_sets_o(alpha,
-// 						 2,
-// 						 2);
-// 	ordered_basis_sizes.push_back(alpha.size());
-
-// 	size_t total = alpha.size();
-// 	for (int i = 2; i <= 4; ++i) {
-// 		temp_alpha.clear();
-// 		compute_index_sets_o(temp_alpha,
-// 							 n + 1,
-// 							 i);
-		
-// 		size_t temp_alpha_size = temp_alpha.size();
-// 		if (temp_alpha_size != 0) {
-// 			alpha.insert(alpha.end(), temp_alpha.begin(), temp_alpha.end());
-// 		}
-// 		ordered_basis_sizes.push_back(total + temp_alpha_size);
-// 		total += temp_alpha_size;
-			
-// 		if (i == 3) {
-// 			temp_alpha.clear();
-// 			compute_index_sets_p(temp_alpha,
-// 								 n,
-// 								 i);
-			
-// 			size_t temp_alpha_size = temp_alpha.size();
-// 			if (temp_alpha_size != 0) {
-// 				alpha.insert(alpha.end(), temp_alpha.begin(), temp_alpha.end());
-// 			}
-// 			ordered_basis_sizes.push_back(total + temp_alpha_size);
-// 			total += temp_alpha_size;
-// 		}
-
-// 		else if (i == 4) {
-// 			temp_alpha.clear();
-// 			compute_index_sets_o(temp_alpha,
-// 								 n + 2,
-// 								 i);
-			
-// 			size_t temp_alpha_size = temp_alpha.size();
-
-// 			for (int l = 0; l < 2; ++l) {
-// 				if (temp_alpha_size != 0) {
-// 					alpha.insert(alpha.end(), temp_alpha.begin(), temp_alpha.end());
-// 				}
-// 				ordered_basis_sizes.push_back(total + temp_alpha_size);
-// 				total += temp_alpha_size;
-// 			}
-
-// 			size_t counter = 0; 
-// 			for (size_t j = 0; j < temp_alpha_size; ++j) {
-// 				if (temp_alpha[j][2] == 1) {
-// 					alpha.push_back(temp_alpha[j]);
-// 					++counter;
-// 				}
-// 			}
-
-// 			ordered_basis_sizes.push_back(total + counter);	
-// 			total += counter;
-// 		}
-// 	}
-
-// 	size_t alpha_size = alpha.size();
-
-// 	print_vector(alpha);
-
-// 	Vector2I all_faces;
-// 	compute_index_sets_o(all_faces,
-// 						 3,
-// 						 3);
-
-// 	#ifdef MULTICORE
-// 		#pragma omp parallel for
-// 	#endif
-// 	for(size_t s = 0; s < num_simplices[N-1]; ++s) {
-// 		double e = 0;
-
-// 		Vector2D pts;
-// 		for(size_t k = 0; k < N; ++k) {
-// 			pts.push_back(vertices[simplices[N-1][s][k]]);
-// 		}
-// 		double vol = get_simplex_volume(pts);
-
-// 		DenMatD grad_bary_coords;
-// 		barycentric_gradients(grad_bary_coords,
-// 							  pts);
-
-// 		VectorDenMatD basis_elements;
-// 		for(size_t i = 0; i < alpha_size; ++i) {
-// 			DenMatD temp_basis_elements(bary_coords_size, embed_dim);
-
-// 			VectorI local_indices;
-// 			for (int j = 0; j < 4; ++j) {
-// 				if (alpha[i][j] > 0) {
-// 					local_indices.push_back(j);
-// 				}
-// 			}
-// 			size_t local_indices_size = local_indices.size();
-			
-// 			for(size_t j = 0; j < bary_coords_size; ++j) {
-// 				if (i < ordered_basis_sizes[0]) {
-// 					EigVectorD omega;
-
-// 					DenMatD temp_grad_bary_coords(local_indices_size, embed_dim);
-// 					VectorD temp_bary_coords;
-
-// 					for (size_t k = 0; k < local_indices_size; ++k) {
-// 						temp_bary_coords.push_back(bary_coords[j][local_indices[k]]);
-// 						temp_grad_bary_coords.row(k) = grad_bary_coords.row(local_indices[k]);
-// 					}
-					
-// 					// print_vector(temp_bary_coords);
-// 					// std::cout<<temp_grad_bary_coords<<"\n";
-// 					omega_ij(omega,
-// 							 temp_bary_coords,
-// 							 temp_grad_bary_coords);
-					
-// 					temp_basis_elements.row(j) = omega;
-// 				}
-// 				else if ((i >= ordered_basis_sizes[0] && i < ordered_basis_sizes[1]) ||
-// 						 (i >= ordered_basis_sizes[1] && i < ordered_basis_sizes[2]) ||
-// 						 (i >= ordered_basis_sizes[3] && i < ordered_basis_sizes[4])) {
-// 					EigVectorD grad_b;
-
-// 					grad_B(grad_b,
-// 						   alpha[i],
-// 						   n + 1,
-// 						   bary_coords[j],
-// 						   grad_bary_coords);
-
-// 					temp_basis_elements.row(j) = grad_b;
-// 				}
-// 				else if (i >= ordered_basis_sizes[2] && i < ordered_basis_sizes[3]) {
-// 					EigVectorD phi;
-
-// 					int E_nF_size = ordered_basis_sizes[3] - ordered_basis_sizes[2];
-// 					int face_index = std::floor((i - ordered_basis_sizes[2])/(E_nF_size/4));
-// 					VectorI face = all_faces[face_index];
-					
-// 					VectorI temp_local_indices;
-
-// 					for (int k = 0; k < 4; ++k) {
-// 						if (face[k] > 0) {
-// 							temp_local_indices.push_back(k);
-// 						}
-// 					}
-
-// 					phi_FT(phi,
-// 						   alpha[i],
-// 						   n,
-// 						   bary_coords[j],
-// 						   grad_bary_coords,
-// 						   temp_local_indices);
-
-// 					temp_basis_elements.row(j) = phi;
-
-// 				}
-// 				else if (i >= ordered_basis_sizes[4] && i < ordered_basis_sizes[5]) {
-// 					EigVectorD psi;
-
-// 					psi_T(psi,
-// 						   alpha[i],
-// 						   n + 1,
-// 						   0,
-// 						   bary_coords[j],
-// 						   grad_bary_coords);
-
-// 					temp_basis_elements.row(j) = psi;
-// 				}
-// 				else if (i >= ordered_basis_sizes[5] && i < ordered_basis_sizes[6]) {
-// 					EigVectorD psi;
-
-// 					psi_T(psi,
-// 						   alpha[i],
-// 						   n + 1,
-// 						   1,
-// 						   bary_coords[j],
-// 						   grad_bary_coords);
-
-// 					temp_basis_elements.row(j) = psi;
-// 				}
-// 				else if (i >= ordered_basis_sizes[6] && i < ordered_basis_sizes[7]) {
-// 					EigVectorD psi;
-
-// 					psi_T(psi,
-// 						   alpha[i],
-// 						   n + 1,
-// 						   2,
-// 						   bary_coords[j],
-// 						   grad_bary_coords);
-
-// 					temp_basis_elements.row(j) = psi;
-// 				}
-// 			}
-
-// 			// std::cout<<temp_basis_elements<<"\n";
-
-// 			basis_elements.push_back(temp_basis_elements);
-// 		}
-
-// 		// std::cout<<"mass matrix callled\n";
-// 		DenMatD M;
-// 		bb_mass_matrix_H_curl(M,
-// 							  pts,
-// 						 	  n,
-// 						 	  alpha,
-// 						 	  ordered_basis_sizes);
-
-// 		for(size_t bary_coords_index = 0; bary_coords_index < bary_coords_size; ++bary_coords_index) {
-// 			EigVectorD b(alpha_size);
-
-// 			for(size_t j = 0; j < alpha_size; ++j) {
-// 				double inner_product = 0.0;
-
-// 				for(size_t k = 0; k < nodes_size; ++k) {
-// 					VectorD vec(embed_dim, 0.0);
-
-// 					for(size_t v = 0; v < N; ++v) {
-// 						for(size_t l = 0; l < embed_dim; ++l) {
-// 							vec[l] += pts[v][l] * nodes[k][v];
-// 						}
-// 					}
-
-// 					VectorD temp_vec;
-// 					get_analytical_soln_vec(temp_vec,
-// 											vec);
-// 					EigVectorD f(embed_dim);
-// 					for (size_t v = 0; v < embed_dim; ++v) {
-// 						f.coeffRef(v) = temp_vec[v];
-// 					}
-// 					inner_product += weights[k] * f.dot(basis_elements[j].row(k));
-// 				}
-
-// 				b.coeffRef(j) = vol * inner_product/sum_weights;
-// 			}
-
-// 			// std::cout<<"b\n"<<b;
-
-// 			EigVectorD coeffs = M.colPivHouseholderQr().solve(b);
-
-// 			// std::cout<<"\ncoeffs\n"<<coeffs;
-
-// 			EigVectorD f_dash = EigVectorD::Zero(embed_dim);
-// 			for (size_t j = 0; j < alpha_size; ++j) {
-// 				f_dash += coeffs.coeffRef(j) * basis_elements[j].row(bary_coords_index);
-// 			}
-
-// 			// std::cout<<"f_dash\n"<<f_dash;
-
-// 			VectorD points(embed_dim, 0.0);
-// 			for(size_t v = 0; v < N; ++v) {
-// 				for(size_t l = 0; l < embed_dim; ++l) {
-// 					points[l] += pts[v][l] * bary_coords[bary_coords_index][v];
-// 				}
-// 			}
-
-// 			VectorD temp_vec;
-// 			get_analytical_soln_vec(temp_vec,
-// 									points);
-// 			EigVectorD f(embed_dim);
-// 			for (size_t v = 0; v < embed_dim; ++v) {
-// 				f.coeffRef(v) = temp_vec[v];
-// 			}
-
-// 			// std::cout<<"\nf_dash\n"<<f_dash;
-// 			// std::cout<<"\nf\n"<<f;
-
-// 			e += pow((f - f_dash).norm(), 2);
-// 		}
-
-// 		#ifdef MULTICORE
-// 			#pragma omp critical
-// 		#endif
-// 		E += e;
-// 	}
-
-// 	E = sqrt(E);
-// 	return E;
-// }
-
-
 FiniteElementExteriorCalculus::FiniteElementExteriorCalculus() {
 
-    set_hodge_stars_to_null();
+    set_mass_matrices_to_null();
     
 }
 
 
 FiniteElementExteriorCalculus::FiniteElementExteriorCalculus(SimplicialComplex sc) : GeometryComplex(sc) {
 
-    set_hodge_stars_to_null();
+    set_mass_matrices_to_null();
 }
 
 FiniteElementExteriorCalculus::~FiniteElementExteriorCalculus() {}

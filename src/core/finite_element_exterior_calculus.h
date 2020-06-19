@@ -9,9 +9,9 @@
 class FiniteElementExteriorCalculus: public GeometryComplex {
 
  public:
-    VectorSpmatD hodge_stars;
+    VectorSpmatD mass_matrices;
 
-    bool all_hodge_stars;
+    bool all_mass_matrices;
 
  public:
     int get_hodge_star(int k, SpMatD &mat);
@@ -23,11 +23,11 @@ class FiniteElementExteriorCalculus: public GeometryComplex {
 
     ~FiniteElementExteriorCalculus();
 
-    int compute_hodge_stars();
+    int compute_mass_matrices(); //compute_mass_matrices, compute_bb_mass_matrices
 
-    int compute_hodge_star_k(int &k);
+    int compute_mass_matrix_k(int &k);
 
-    int set_hodge_stars_to_null();
+    int set_mass_matrices_to_null();
 
     int bb_mass_matrix_H_1(DenMatD &mass_matrix,
     					   int n, 
@@ -111,9 +111,6 @@ class FiniteElementExteriorCalculus: public GeometryComplex {
 								   VectorI &num_simplices,
 								   int q_order = 4);
 
-    int test_basis_functions(int n);
-    double test_mass_matrix(int n,
-    					 int q_order = 4);
 };
 
 #endif
