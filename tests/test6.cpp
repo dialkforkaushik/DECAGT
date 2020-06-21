@@ -8,7 +8,10 @@
 #include <vector>
 
 int main (int argc, char const *argv[]) {
-	FiniteElementExteriorCalculus fem;
+	DiscreteExteriorCalculus dec;
+	dec.compute_dual_volumes();
+
+	print_vector(dec.dual_volume);
 
 	return SUCCESS;
 }

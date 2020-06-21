@@ -14,10 +14,22 @@ int main (int argc, char const *argv[]) {
 
 	FiniteElementExteriorCalculus fem(sc);
 
-	// fem.test_basis_functions(3);
-	error = fem.test_mass_matrix(3, 1);
-	std::cout<<"\nerror: "<<error<<"\n";
+	for (int i = 0; i < 11; ++i) {
+		std::cout<<"\nPolynomial Degree: "<<i<<"\n";
+		error = fem.bb_error_H_div(i,
+							       i+3);
 
+		std::cout<<"\nError: "<<error<<"\n";
+	}
+
+	// EigVectorD c;
+	// EigVectorD v1(3);
+	// v1 << -1, -1, -1;
+	// EigVectorD v2(3);
+	// v2 << 0, 1, 0;
+
+	// cross_product(c, v1, v2);
+	// std::cout<<c;
 
 	return SUCCESS;
 }

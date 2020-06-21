@@ -15,6 +15,10 @@ int binomialCoeff(long long &nCk,
 				  int n,
 				  int k);
 
+int cross_product(EigVectorD &cross,
+				  EigVectorD &v1,
+				  EigVectorD &v2);
+
 int get_sum(int &sum,
 			VectorI vec);
 

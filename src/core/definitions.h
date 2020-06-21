@@ -44,6 +44,7 @@ typedef std::vector < SpMatD > VectorSpmatD;
 typedef std::vector < DenMatD > VectorDenMatD;
 typedef std::vector < VectorMapI > VectorMap2I;
 typedef std::vector < std::vector < VectorMapI > > VectorMap3I;
+typedef std::vector < EigVectorD > VectorEigVectorD;
 
 typedef Eigen::Triplet < double > TripletD;
 typedef Eigen::Triplet < int > TripletI;

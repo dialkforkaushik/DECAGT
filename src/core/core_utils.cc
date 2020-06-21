@@ -95,6 +95,23 @@ int binomialCoeff(long long &nCk,
     return SUCCESS; 
 }
 
+int cross_product(EigVectorD &cross,
+				  EigVectorD &v1,
+				  EigVectorD &v2) {
+
+	if (v1.size() != v2.size()) {
+		return FAILURE;
+	}
+
+	cross = EigVectorD::Zero(v1.size());
+
+	cross[0] = v1[1]*v2[2] - v1[2]*v2[1];
+  	cross[1] = v1[2]*v2[0] - v1[0]*v2[2];
+  	cross[2] = v1[0]*v2[1] - v1[1]*v2[0];
+
+  	return SUCCESS;
+}
+
 
 int l2_norm(double norm,
 			VectorD v) {

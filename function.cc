@@ -20,9 +20,9 @@ extern "C" std::vector<double> function(double f[]) {
 
 	std::vector<double> out;
 
-	out.push_back(1);
-	out.push_back(1);
-	out.push_back(1);
+	// out.push_back(1);
+	// out.push_back(1);
+	// out.push_back(1);
 
 	// out.push_back(f[1] - f[2]);
 	// out.push_back(f[2] - f[0]);
@@ -32,6 +32,9 @@ extern "C" std::vector<double> function(double f[]) {
 	// out.push_back(f[1]);
 	// out.push_back(f[2]);
 
+	out.push_back(f[0]*f[0]);
+	out.push_back(f[1]*f[1]);
+	out.push_back(f[2]*f[2]);
 
 	return out;
 }

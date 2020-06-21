@@ -22,35 +22,32 @@ int main (int argc, char const *argv[]) {
 	for (int i = 1; i < 11; ++i) {
 		std::cout<<"\nPolynomial Degree: "<<i<<"\n";
 		error = fem.bb_error_H_curl(i,
-							     sc.simplices,
-							     sc.vertices,
-							     sc.num_simplices,
-							     4);
+							     	i+3);
 
 		std::cout<<"\nError: "<<error<<"\n";
 	}
 
-	for (int i = 1; i < 11; ++i) {
-		std::cout<<"\nPolynomial Degree: "<<i<<"\n";
-		error = fem.bb_error_H_curl(i,
-							     sc.simplices,
-							     sc.vertices,
-							     sc.num_simplices,
-							     i);
+	// for (int i = 1; i < 11; ++i) {
+	// 	std::cout<<"\nPolynomial Degree: "<<i<<"\n";
+	// 	error = fem.bb_error_H_curl(i,
+	// 						     sc.simplices,
+	// 						     sc.vertices,
+	// 						     sc.num_simplices,
+	// 						     i+1);
 
-		std::cout<<"\nError: "<<error<<"\n";
-	}
+	// 	std::cout<<"\nError: "<<error<<"\n";
+	// }
 
-	for (int i = 1; i < 11; ++i) {
-		std::cout<<"\nPolynomial Degree: "<<i<<"\n";
-		error = fem.bb_error_H_curl(i,
-							     sc.simplices,
-							     sc.vertices,
-							     sc.num_simplices,
-							     i+1);
+	// for (int i = 1; i < 11; ++i) {
+	// 	std::cout<<"\nPolynomial Degree: "<<i<<"\n";
+	// 	error = fem.bb_error_H_curl(i,
+	// 						     sc.simplices,
+	// 						     sc.vertices,
+	// 						     sc.num_simplices,
+	// 						     i+2);
 
-		std::cout<<"\nError: "<<error<<"\n";
-	}
+	// 	std::cout<<"\nError: "<<error<<"\n";
+	// }
 
 	return 0;
 }
