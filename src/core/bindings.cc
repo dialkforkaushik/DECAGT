@@ -55,9 +55,9 @@ PYBIND11_MODULE(decagt, m) {
     py::class_<FiniteElementExteriorCalculus, GeometryComplex>(m, "FiniteElementExteriorCalculus")
 		.def(py::init<>())
         .def(py::init<SimplicialComplex>())
-		.def("compute_hodge_stars", &FiniteElementExteriorCalculus::compute_hodge_stars, py::call_guard<py::gil_scoped_release>())
-        .def("compute_hodge_star_k", &FiniteElementExteriorCalculus::compute_hodge_star_k, py::call_guard<py::gil_scoped_release>())
-		.def("set_hodge_stars_to_null", &FiniteElementExteriorCalculus::set_hodge_stars_to_null)
+		.def("compute_mass_matrices", &FiniteElementExteriorCalculus::compute_mass_matrices, py::call_guard<py::gil_scoped_release>())
+        .def("compute_mass_matrix_k", &FiniteElementExteriorCalculus::compute_mass_matrix_k, py::call_guard<py::gil_scoped_release>())
+		.def("set_mass_matrices_to_null", &FiniteElementExteriorCalculus::set_mass_matrices_to_null)
         .def("bb_mass_matrix_H_1", &FiniteElementExteriorCalculus::bb_mass_matrix_H_1)
         .def("bb_mass_matrix_H_curl", &FiniteElementExteriorCalculus::bb_mass_matrix_H_curl)
         .def("bb_mass_matrix_H_div", &FiniteElementExteriorCalculus::bb_mass_matrix_H_div)
@@ -79,8 +79,8 @@ PYBIND11_MODULE(decagt, m) {
         .def("bb_error_H_curl", &FiniteElementExteriorCalculus::bb_error_H_curl, py::call_guard<py::gil_scoped_release>())
         .def("bb_error_H_div", &FiniteElementExteriorCalculus::bb_error_H_div, py::call_guard<py::gil_scoped_release>())
         .def("bb_error_H_curl_1d_quad", &FiniteElementExteriorCalculus::bb_error_H_curl_1d_quad, py::call_guard<py::gil_scoped_release>())
-        .def_readonly("hodge_stars", &FiniteElementExteriorCalculus::hodge_stars)
-        .def_readonly("all_hodge_stars", &FiniteElementExteriorCalculus::all_hodge_stars);
+        .def_readonly("mass_matrices", &FiniteElementExteriorCalculus::mass_matrices)
+        .def_readonly("all_mass_matrices", &FiniteElementExteriorCalculus::all_mass_matrices);
 
 
     py::class_<DiscreteExteriorCalculus, GeometryComplex>(m, "DiscreteExteriorCalculus")
