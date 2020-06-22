@@ -102,6 +102,18 @@ int GeometryComplex::compute_dual_volume_k(int &dim,
 
 	Vector2D temp_centers;
 
+	DenMatD pts(N, embedding_dimension);
+	for(size_t i = 0; i < N; ++i) {
+		for(size_t j = 0; j < embedding_dimension; ++j) {
+			pts.coeffRef(i, j) = vertices[simplices[N-1][k][i]][j];
+		}
+	}
+	DenMatD bpts;
+	circumcenter_barycentric(pts,
+							 bpts);
+	VectorI signs(N, 1.0);
+	VectorI parent;
+
 	calculate_dual_volume(dual_volume,
 						  temp_centers,
 						  vertices,
@@ -109,6 +121,9 @@ int GeometryComplex::compute_dual_volume_k(int &dim,
 						  adjacency1d,
 						  simplices[N-1][k],
 						  highest_dim_circumcenters[k],
+						  parent,
+						  signs,
+						  bpts,
 						  N-1,
 						  k,
 						  complex_dimension);
@@ -177,6 +192,23 @@ int GeometryComplex::compute_dual_volumes() {
 	#endif
 
 	for (int j = 0; j < num_simplices[N-1]; ++j) {
+		DenMatD pts(N, embedding_dimension);
+		for(size_t k = 0; k < N; ++k) {
+			for(size_t i = 0; i < embedding_dimension; ++i) {
+				pts.coeffRef(k, i) = vertices[simplices[N-1][j][k]][i];
+			}
+		}
+		DenMatD bpts;
+		circumcenter_barycentric(pts,
+								 bpts);
+		for (int i = 0; i < bpts.rows(); ++i) {
+			if (abs(bpts.coeffRef(i, 0)) < 1e-13) {
+				bpts.coeffRef(i, 0) = 0;
+			}
+		}
+		VectorI signs(N, 1.0);
+		VectorI parent;
+
 		calculate_dual_volume(dual_volume,
 							  temp_centers,
 							  vertices,
@@ -184,6 +216,9 @@ int GeometryComplex::compute_dual_volumes() {
 							  adjacency1d,
 							  simplices[N-1][j],
 							  highest_dim_circumcenters[j],
+							  parent,
+							  signs,
+							  bpts,
 							  N-1,
 							  j,
 							  complex_dimension);

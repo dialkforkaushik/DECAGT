@@ -47,15 +47,18 @@ int unsigned_volume(Vector2D &pts,
 					double &vol);
 
 int calculate_dual_volume(Vector2D &dual_volume,
-						  Vector2D &temp_centers,
-						  Vector2D &vertices,
-						  Vector3I &simplices,
-						  VectorMap3I &adjacency1d,
-						  VectorI &pts,
-						  VectorD &highest_dim_circumcenter,
-						  int dim,
-						  int index,
-						  size_t complex_dimension);
+						Vector2D &temp_centers,
+						Vector2D &vertices,
+						Vector3I &simplices,
+						VectorMap3I &adjacency1d,
+						VectorI &pts,
+						VectorD &highest_dim_circumcenter,
+						VectorI &parent,
+						VectorI &signs,
+						DenMatD &bpts,
+						int dim,
+						int index,
+						size_t complex_dimension);
 
 int get_circumcenter(VectorD &center,
 				     double &radius,

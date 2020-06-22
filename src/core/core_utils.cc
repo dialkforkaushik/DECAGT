@@ -292,6 +292,9 @@ int calculate_dual_volume(Vector2D &dual_volume,
 						VectorMap3I &adjacency1d,
 						VectorI &pts,
 						VectorD &highest_dim_circumcenter,
+						VectorI &parent,
+						VectorI &signs,
+						DenMatD &bpts,
 						int dim,
 						int index,
 						size_t complex_dimension) {
@@ -302,6 +305,7 @@ int calculate_dual_volume(Vector2D &dual_volume,
 
 	Vector2D vertex_pts;
 
+	int sgn = 1;
 	
 	if (dim == complex_dimension) {
 		temp_centers.push_back(highest_dim_circumcenter);
@@ -311,11 +315,35 @@ int calculate_dual_volume(Vector2D &dual_volume,
 			vertex_pts.push_back(vertices[pts[i]]);
 		}
 		get_circumcenter(center,
-					radius,
-					vertex_pts);
+						 radius,
+						 vertex_pts);
 
 		temp_centers.push_back(center);
-	}	
+	}
+
+	if (!parent.empty()) {
+		int ov_index = -1;
+
+		size_t parent_size = parent.size();
+		size_t pts_size = pts.size();
+		for (size_t i = 0; i < parent_size; ++i) {
+			int flag = 0;
+			for(size_t j = 0; j < pts_size; ++j) {
+				if (parent[i] == pts[j]) {
+					flag = 1;
+				}
+			}
+			if (flag == 0) {
+				ov_index = i;
+				break;
+			}
+		}
+
+		signs[dim] = copysign(1, bpts.coeffRef(ov_index, 0));
+	}
+	for (size_t i = dim; i < complex_dimension; ++i) {
+		sgn *= signs[i];
+	}
 
 	unsigned_volume(temp_centers, vol);
 
@@ -323,7 +351,7 @@ int calculate_dual_volume(Vector2D &dual_volume,
 		#pragma omp critical
 	#endif
 
-	dual_volume[dim][index] += vol;
+	dual_volume[dim][index] += sgn * vol;
 	
 	if (dim == 0) {
 		return SUCCESS;
@@ -337,6 +365,9 @@ int calculate_dual_volume(Vector2D &dual_volume,
 							  adjacency1d,
 							  simplices[dim - 1][it->first],
 							  highest_dim_circumcenter,
+							  pts,
+							  signs,
+							  bpts,
 							  dim - 1,
 							  it->first,
 							  complex_dimension);
