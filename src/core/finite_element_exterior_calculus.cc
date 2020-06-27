@@ -3729,28 +3729,29 @@ double FiniteElementExteriorCalculus::bb_error_H_1(int n,
 
 		DenMatD temp_M = M * vol;
 
-		for(size_t node_index = 0; node_index < nodes_size; ++node_index) {
-			EigVectorD b(alpha_size);
+		EigVectorD b(alpha_size);
 
-			for(size_t j = 0; j < alpha_size; ++j) {
-				double inner_product = 0.0;
+		for(size_t j = 0; j < alpha_size; ++j) {
+			double inner_product = 0.0;
 
-				for(size_t k = 0; k < nodes_size; ++k) {
-					VectorD vec(embed_dim, 0.0);
+			for(size_t k = 0; k < nodes_size; ++k) {
+				VectorD vec(embed_dim, 0.0);
 
-					for(size_t v = 0; v < N; ++v) {
-						for(size_t l = 0; l < embed_dim; ++l) {
-							vec[l] += pts[v][l] * nodes[k][v];
-						}
+				for(size_t v = 0; v < N; ++v) {
+					for(size_t l = 0; l < embed_dim; ++l) {
+						vec[l] += pts[v][l] * nodes[k][v];
 					}
-
-					inner_product += vol * weights[k] * get_analytical_soln(vec) * basis_elements.coeffRef(j, k);
 				}
 
-				b.coeffRef(j) = inner_product/sum_weights;
+				inner_product += vol * weights[k] * get_analytical_soln(vec) * basis_elements.coeffRef(j, k);
 			}
 
-			EigVectorD coeffs = temp_M.colPivHouseholderQr().solve(b);
+			b.coeffRef(j) = inner_product/sum_weights;
+		}
+
+		EigVectorD coeffs = temp_M.colPivHouseholderQr().solve(b);
+
+		for(size_t node_index = 0; node_index < nodes_size; ++node_index) {
 
 			double f_dash = coeffs.dot(basis_elements.col(node_index));
 			
