@@ -4002,35 +4002,36 @@ double FiniteElementExteriorCalculus::bb_error_H_curl(int n,
 						 	  alpha,
 						 	  ordered_basis_sizes);
 
-		for(size_t node_index = 0; node_index < nodes_size; ++node_index) {
-			EigVectorD b(alpha_size);
+		EigVectorD b(alpha_size);
 
-			for(size_t j = 0; j < alpha_size; ++j) {
-				double inner_product = 0.0;
+		for(size_t j = 0; j < alpha_size; ++j) {
+			double inner_product = 0.0;
 
-				for(size_t k = 0; k < nodes_size; ++k) {
-					VectorD vec(embed_dim, 0.0);
+			for(size_t k = 0; k < nodes_size; ++k) {
+				VectorD vec(embed_dim, 0.0);
 
-					for(size_t v = 0; v < N; ++v) {
-						for(size_t l = 0; l < embed_dim; ++l) {
-							vec[l] += pts[v][l] * nodes[k][v];
-						}
+				for(size_t v = 0; v < N; ++v) {
+					for(size_t l = 0; l < embed_dim; ++l) {
+						vec[l] += pts[v][l] * nodes[k][v];
 					}
-
-					VectorD temp_vec;
-					get_analytical_soln_vec(temp_vec,
-											vec);
-					EigVectorD f(embed_dim);
-					for (size_t v = 0; v < embed_dim; ++v) {
-						f.coeffRef(v) = temp_vec[v];
-					}
-					inner_product += weights[k] * f.dot(basis_elements[j].row(k));
 				}
 
-				b.coeffRef(j) = vol * inner_product/sum_weights;
+				VectorD temp_vec;
+				get_analytical_soln_vec(temp_vec,
+										vec);
+				EigVectorD f(embed_dim);
+				for (size_t v = 0; v < embed_dim; ++v) {
+					f.coeffRef(v) = temp_vec[v];
+				}
+				inner_product += weights[k] * f.dot(basis_elements[j].row(k));
 			}
 
-			EigVectorD coeffs = M.colPivHouseholderQr().solve(b);
+			b.coeffRef(j) = vol * inner_product/sum_weights;
+		}
+
+		EigVectorD coeffs = M.colPivHouseholderQr().solve(b);
+
+		for(size_t node_index = 0; node_index < nodes_size; ++node_index) {
 
 			EigVectorD f_dash = EigVectorD::Zero(embed_dim);
 			for (size_t j = 0; j < alpha_size; ++j) {
@@ -4272,36 +4273,37 @@ double FiniteElementExteriorCalculus::bb_error_H_div(int n,
 						 	 alpha,
 						 	 ordered_basis_sizes);
 
-		for(size_t node_index = 0; node_index < nodes_size; ++node_index) {
-			EigVectorD b(alpha_size);
+		EigVectorD b(alpha_size);
 
-			for(size_t j = 0; j < alpha_size; ++j) {
-				double inner_product = 0.0;
+		for(size_t j = 0; j < alpha_size; ++j) {
+			double inner_product = 0.0;
 
-				for(size_t k = 0; k < nodes_size; ++k) {
-					VectorD vec(embed_dim, 0.0);
+			for(size_t k = 0; k < nodes_size; ++k) {
+				VectorD vec(embed_dim, 0.0);
 
-					for(size_t v = 0; v < N; ++v) {
-						for(size_t l = 0; l < embed_dim; ++l) {
-							vec[l] += pts[v][l] * nodes[k][v];
-						}
+				for(size_t v = 0; v < N; ++v) {
+					for(size_t l = 0; l < embed_dim; ++l) {
+						vec[l] += pts[v][l] * nodes[k][v];
 					}
-
-					VectorD temp_vec;
-					get_analytical_soln_vec(temp_vec,
-											vec);
-					EigVectorD f(embed_dim);
-					for (size_t v = 0; v < embed_dim; ++v) {
-						f.coeffRef(v) = temp_vec[v];
-					}
-					inner_product += weights[k] * f.dot(basis_elements[j].row(k));
 				}
 
-				b.coeffRef(j) = vol * inner_product/sum_weights;
+				VectorD temp_vec;
+				get_analytical_soln_vec(temp_vec,
+										vec);
+				EigVectorD f(embed_dim);
+				for (size_t v = 0; v < embed_dim; ++v) {
+					f.coeffRef(v) = temp_vec[v];
+				}
+				inner_product += weights[k] * f.dot(basis_elements[j].row(k));
 			}
 
-			EigVectorD coeffs = M.colPivHouseholderQr().solve(b);
+			b.coeffRef(j) = vol * inner_product/sum_weights;
+		}
 
+		EigVectorD coeffs = M.colPivHouseholderQr().solve(b);
+
+		for(size_t node_index = 0; node_index < nodes_size; ++node_index) {
+		
 			EigVectorD f_dash = EigVectorD::Zero(embed_dim);
 			for (size_t j = 0; j < alpha_size; ++j) {
 				f_dash += coeffs.coeffRef(j) * basis_elements[j].row(node_index);
@@ -4639,7 +4641,7 @@ int FiniteElementExteriorCalculus::compute_bb_mass_matrices(int k,
 							 	 i);
 
 			alpha.insert(alpha.end(), temp_alpha.begin(), temp_alpha.end());
-			ordered_basis_sizes.push_back(alpha.size());
+			ordered_basis_sizes.push_back((int)alpha.size());
 		}
 		size_t alpha_size = alpha.size();
 
