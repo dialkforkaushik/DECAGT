@@ -42,22 +42,22 @@ test5: $(OBJ5)
 test6: $(OBJ6)
 	$(CC) $(OBJ6) -o $@
 
-test1.o: tests/test1.cpp $(HEADER)
+test1.o: tests/analytical.cpp $(HEADER)
 	$(CC) $(CFLAGS) $< -o $@
 
-test2.o: tests/test2.cpp $(HEADER)
+test2.o: tests/index_sets.cpp $(HEADER)
 	$(CC) $(CFLAGS) $< -o $@
 
-test3.o: tests/test3.cpp $(HEADER)
+test3.o: tests/bb_error.cpp $(HEADER)
 	$(CC) $(CFLAGS) $< -o $@
 
-test4.o: tests/test4.cpp $(HEADER)
+test4.o: tests/global_mass_matrix.cpp $(HEADER)
 	$(CC) $(CFLAGS) $< -o $@
 
-test5.o: tests/test5.cpp $(HEADER)
+test5.o: tests/random.cpp $(HEADER)
 	$(CC) $(CFLAGS) $< -o $@
 
-test6.o: tests/test6.cpp $(HEADER)
+test6.o: tests/stiffness.cpp $(HEADER)
 	$(CC) $(CFLAGS) $< -o $@
 
 simplicial_complex.o: src/core/simplicial_complex.cc src/core/definitions.h src/core/core_utils.h

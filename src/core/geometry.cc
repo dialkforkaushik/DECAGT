@@ -201,11 +201,6 @@ int GeometryComplex::compute_dual_volumes() {
 		DenMatD bpts;
 		circumcenter_barycentric(pts,
 								 bpts);
-		for (int i = 0; i < bpts.rows(); ++i) {
-			if (abs(bpts.coeffRef(i, 0)) < 1e-13) {
-				bpts.coeffRef(i, 0) = 0;
-			}
-		}
 		VectorI signs(N, 1.0);
 		VectorI parent;
 

@@ -60,6 +60,11 @@ int binomialCoeff(int &nCk,
 				  int n,
 				  int k) {  
 	
+    if (n < k) {
+    	nCk = 0;
+    	return FAILURE;
+    }
+
     int res = 1;  
   
     if ( k > n - k )  

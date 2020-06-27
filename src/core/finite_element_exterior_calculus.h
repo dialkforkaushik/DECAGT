@@ -11,6 +11,8 @@ class FiniteElementExteriorCalculus: public GeometryComplex {
  public:
     VectorSpmatD mass_matrices;
 
+    VectorSpmatD bb_mass_matrices;
+
     bool all_mass_matrices;
 
  public:
@@ -23,15 +25,19 @@ class FiniteElementExteriorCalculus: public GeometryComplex {
 
     ~FiniteElementExteriorCalculus();
 
-    int compute_mass_matrices(); //compute_mass_matrices, compute_bb_mass_matrices
+    int compute_mass_matrices(); //compute_bb_mass_matrices
+
+    int compute_bb_mass_matrices(int k,
+    							 int n);
 
     int compute_mass_matrix_k(int &k);
 
     int set_mass_matrices_to_null();
 
+    int set_bb_mass_matrices_to_null();
+
     int bb_mass_matrix_H_1(DenMatD &mass_matrix,
-    					   int n, 
-    					   int m,
+    					   int n,
     					   Vector2I &index_sets,
     					   int d = 3);
 
@@ -46,6 +52,19 @@ class FiniteElementExteriorCalculus: public GeometryComplex {
 							 int n,
 							 Vector2I &alpha,
 							 VectorI &ordered_basis_sizes);
+
+    int bb_stiffness_matrix_H_curl(DenMatD &mass_matrix,
+	    						  Vector2D &pts,
+								  int n,
+								  Vector2I &alpha,
+								  VectorI &ordered_basis_sizes);
+
+    int bb_stiffness_matrix_H_div(DenMatD &mass_matrix,
+	    						  Vector2D &pts,
+								  int n,
+								  Vector2I &alpha,
+								  VectorI &ordered_basis_sizes,
+								  DenMatD &grad_bary_coords);
 
     int M_alpha_beta(double &M,
 			  		VectorI &alpha,
@@ -83,6 +102,11 @@ class FiniteElementExteriorCalculus: public GeometryComplex {
 			  int l,
 			  VectorD &bary_coords,
 			  DenMatD &grad_bary_coords);
+
+    int curl_omega_ij(EigVectorD &curl_omega,
+					 int i,
+					 int j,
+					 DenMatD &grad_bary_coords);
 
     int chi_l(EigVectorD &chi,
 			  VectorI &alpha,
@@ -126,9 +150,6 @@ class FiniteElementExteriorCalculus: public GeometryComplex {
 				   			 int d = 3);
 
     double bb_error_H_1(int n,
-				    	Vector3I &simplices,
-						Vector2D &vertices,
-						VectorI &num_simplices,
 						int q_order = 4);
 
     double bb_error_H_curl(int n,
@@ -136,6 +157,9 @@ class FiniteElementExteriorCalculus: public GeometryComplex {
 
     double bb_error_H_div(int n,
 						  int q_order = 4);
+
+    double bb_error_stiffness_H_curl(int n,
+								     int q_order = 4);
 
     double bb_error_H_curl_1d_quad(int n,
 							       Vector3I &simplices,
