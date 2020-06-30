@@ -152,6 +152,9 @@ class FiniteElementExteriorCalculus: public GeometryComplex {
     double bb_error_H_1(int n,
 						int q_order = 4);
 
+    double bb_error_H_1_global(int n,
+							   int q_order = 4);
+
     double bb_error_H_curl(int n,
 						   int q_order = 4);
 
@@ -166,7 +169,6 @@ class FiniteElementExteriorCalculus: public GeometryComplex {
 								   Vector2D &vertices,
 								   VectorI &num_simplices,
 								   int q_order = 4);
-
 };
 
 #endif
