@@ -25,7 +25,7 @@ class FiniteElementExteriorCalculus: public GeometryComplex {
 
     ~FiniteElementExteriorCalculus();
 
-    int compute_mass_matrices(); //compute_bb_mass_matrices
+    int compute_mass_matrices();
 
     int compute_bb_mass_matrices(int k,
     							 int n);
