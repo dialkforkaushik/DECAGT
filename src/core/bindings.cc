@@ -77,9 +77,11 @@ PYBIND11_MODULE(decagt, m) {
         .def("compute_index_sets_t", &FiniteElementExteriorCalculus::compute_index_sets_t)
         .def("compute_index_sets_p", &FiniteElementExteriorCalculus::compute_index_sets_p)
         .def("bb_error_H_1", &FiniteElementExteriorCalculus::bb_error_H_1, py::call_guard<py::gil_scoped_release>())
-        .def("bb_error_H_1_global", &FiniteElementExteriorCalculus::bb_error_H_1, py::call_guard<py::gil_scoped_release>())
+        .def("bb_error_H_1_global", &FiniteElementExteriorCalculus::bb_error_H_1_global, py::call_guard<py::gil_scoped_release>())
         .def("bb_error_H_curl", &FiniteElementExteriorCalculus::bb_error_H_curl, py::call_guard<py::gil_scoped_release>())
+        .def("bb_error_H_curl_global", &FiniteElementExteriorCalculus::bb_error_H_curl_global, py::call_guard<py::gil_scoped_release>())
         .def("bb_error_H_div", &FiniteElementExteriorCalculus::bb_error_H_div, py::call_guard<py::gil_scoped_release>())
+        .def("bb_error_H_div_global", &FiniteElementExteriorCalculus::bb_error_H_div_global, py::call_guard<py::gil_scoped_release>())
         .def("bb_error_H_curl_1d_quad", &FiniteElementExteriorCalculus::bb_error_H_curl_1d_quad, py::call_guard<py::gil_scoped_release>())
         .def_readonly("mass_matrices", &FiniteElementExteriorCalculus::mass_matrices)
         .def_readonly("all_mass_matrices", &FiniteElementExteriorCalculus::all_mass_matrices);

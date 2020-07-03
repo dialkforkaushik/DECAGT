@@ -893,7 +893,7 @@ public:
 
       Index p = m_outerIndex[outer] + m_innerNonZeros[outer]++;
       m_data.index(p) = convert_index(inner);
-      return (m_data.value(p) = 0);
+      return (m_data.value(p) = Scalar(0));
     }
 
 private:
@@ -938,7 +938,7 @@ void set_from_triplets(const InputIterator& begin, const InputIterator& end, Spa
     // pass 2: insert all the elements into trMat
     trMat.reserve(wi);
     for(InputIterator it(begin); it!=end; ++it)
-      trMat.insertBackUncompressed(it->row(),it->col()) += it->value();
+      trMat.insertBackUncompressed(it->row(),it->col()) = it->value();
 
     // pass 3:
     trMat.collapseDuplicates(dup_func);
@@ -1274,7 +1274,7 @@ EIGEN_DONT_INLINE typename SparseMatrix<_Scalar,_Options,_StorageIndex>::Scalar&
   m_innerNonZeros[outer]++;
 
   m_data.index(p) = inner;
-  return (m_data.value(p) = 0);
+  return (m_data.value(p) = Scalar(0));
 }
 
 template<typename _Scalar, int _Options, typename _StorageIndex>
@@ -1381,7 +1381,7 @@ EIGEN_DONT_INLINE typename SparseMatrix<_Scalar,_Options,_StorageIndex>::Scalar&
   }
 
   m_data.index(p) = inner;
-  return (m_data.value(p) = 0);
+  return (m_data.value(p) = Scalar(0));
 }
 
 namespace internal {

@@ -367,7 +367,7 @@ class CompleteOrthogonalDecomposition {
 
 #ifndef EIGEN_PARSED_BY_DOXYGEN
   template <typename RhsType, typename DstType>
-  void _solve_impl(const RhsType& rhs, DstType& dst) const;
+  EIGEN_DEVICE_FUNC void _solve_impl(const RhsType& rhs, DstType& dst) const;
 #endif
 
  protected:

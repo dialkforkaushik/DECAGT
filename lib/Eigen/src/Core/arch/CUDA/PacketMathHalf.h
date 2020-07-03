@@ -34,7 +34,6 @@ template<> struct packet_traits<Eigen::half> : default_packet_traits
     HasSqrt   = 1,
     HasRsqrt  = 1,
     HasExp    = 1,
-    HasExpm1  = 1,
     HasLog    = 1,
     HasLog1p  = 1
   };
@@ -100,7 +99,8 @@ template<> __device__ EIGEN_STRONG_INLINE Eigen::half pfirst<half2>(const half2&
 
 template<> __device__ EIGEN_STRONG_INLINE half2 pabs<half2>(const half2& a) {
   half2 result;
-  result.x = a.x & 0x7FFF7FFF;
+  unsigned temp = *(reinterpret_cast<const unsigned*>(&(a)));
+  *(reinterpret_cast<unsigned*>(&(result))) = temp & 0x7FFF7FFF;
   return result;
 }
 
@@ -276,15 +276,7 @@ template<> __device__ EIGEN_STRONG_INLINE half2 plog1p<half2>(const half2& a) {
   return __floats2half2_rn(r1, r2);
 }
 
-template<> __device__ EIGEN_STRONG_INLINE half2 pexpm1<half2>(const half2& a) {
-  float a1 = __low2float(a);
-  float a2 = __high2float(a);
-  float r1 = expm1f(a1);
-  float r2 = expm1f(a2);
-  return __floats2half2_rn(r1, r2);
-}
-
-#if defined __CUDACC_VER__ && __CUDACC_VER__ >= 80000 && defined __CUDA_ARCH__ && __CUDA_ARCH__ >= 530
+#if EIGEN_CUDACC_VER >= 80000 && defined EIGEN_CUDA_ARCH && EIGEN_CUDA_ARCH >= 530
 
 template<>  __device__ EIGEN_STRONG_INLINE
 half2 plog<half2>(const half2& a) {

@@ -231,6 +231,64 @@ int get_global_index(int &index,
 		}
 	}
 
+	else if (k == 1) {
+		if (j < ordered_basis_sizes[0]) {
+			index = simplex_sub_simplices[i][1][j];
+		}
+		
+		else if (((j >= ordered_basis_sizes[0] && j < ordered_basis_sizes[1]) ||
+				  (j >= ordered_basis_sizes[1] && j < ordered_basis_sizes[2]) ||
+				  (j >= ordered_basis_sizes[3] && j < ordered_basis_sizes[4]))) {
+
+			if (j >= ordered_basis_sizes[0] && j < ordered_basis_sizes[1]) {
+				int temp = ordered_basis_sizes[1] - ordered_basis_sizes[0];
+				int temp_index = std::floor((j - ordered_basis_sizes[0])/(temp/num_edges));
+				index = sizes[0] + ndofs[1] * simplex_sub_simplices[i][1][temp_index] + (j - ordered_basis_sizes[0])%ndofs[1];
+			}
+			else if (j >= ordered_basis_sizes[1] && j < ordered_basis_sizes[2]) {
+				int temp = ordered_basis_sizes[2] - ordered_basis_sizes[1];
+				int temp_index = std::floor((j - ordered_basis_sizes[1])/(temp/num_faces));
+				index = sizes[1] + ndofs[2] * simplex_sub_simplices[i][2][temp_index] + (j - ordered_basis_sizes[1])%ndofs[2];
+			}
+			else if (j >= ordered_basis_sizes[3] && j < ordered_basis_sizes[4]) {
+				int temp = ordered_basis_sizes[4] - ordered_basis_sizes[3];
+				int temp_index = std::floor((j - ordered_basis_sizes[3])/(temp));
+				index = sizes[3] + ndofs[4] * simplex_sub_simplices[i][3][temp_index] + (j - ordered_basis_sizes[3])%ndofs[4];
+			}
+		}
+		else if (j >= ordered_basis_sizes[2] && j < ordered_basis_sizes[3]) {
+			int temp1 = ordered_basis_sizes[3] - ordered_basis_sizes[2];
+			int temp_index1 = std::floor((j - ordered_basis_sizes[2])/(temp1/num_faces));
+			index = sizes[2] + ndofs[3] * simplex_sub_simplices[i][2][temp_index1] + (j - ordered_basis_sizes[2])%ndofs[3];
+		}
+		else if (j >= ordered_basis_sizes[4]) {
+			int temp1 = ordered_basis_sizes[7] - ordered_basis_sizes[4];
+			int temp_index1 = std::floor((j - ordered_basis_sizes[4])/(temp1));
+			index = sizes[4] + ndofs[5] * simplex_sub_simplices[i][3][temp_index1] + (j - ordered_basis_sizes[4])%ndofs[5];
+		}
+	}
+
+	else if (k == 2) {
+		if (j < ordered_basis_sizes[0]) {
+			index = simplex_sub_simplices[i][2][j];
+		}
+		else if (j >= ordered_basis_sizes[0] && j < ordered_basis_sizes[1]) {
+			int temp = ordered_basis_sizes[1] - ordered_basis_sizes[0];
+			int temp_index1 = std::floor((j - ordered_basis_sizes[0])/(temp/num_faces));
+			index = sizes[0] + ndofs[1] * simplex_sub_simplices[i][2][temp_index1] + (j - ordered_basis_sizes[0])%ndofs[1];
+		}
+		else if (j >= ordered_basis_sizes[1] && j < ordered_basis_sizes[4]) {
+			int temp1 = ordered_basis_sizes[4] - ordered_basis_sizes[1];
+			int temp_index1 = std::floor((j - ordered_basis_sizes[1])/(temp1));
+			index = sizes[1] + ndofs[2] * simplex_sub_simplices[i][3][temp_index1] + (j - ordered_basis_sizes[1])%ndofs[2];
+		}
+		else if (j >= ordered_basis_sizes[4] && j < ordered_basis_sizes[5]) {
+			int temp1 = ordered_basis_sizes[5] - ordered_basis_sizes[4];
+			int temp_index1 = std::floor((j - ordered_basis_sizes[4])/(temp1));
+			index = sizes[2] + ndofs[3] * simplex_sub_simplices[i][3][temp_index1] + (j - ordered_basis_sizes[4])%ndofs[3];
+		}
+	}
+
  	return SUCCESS;
 }
 
@@ -1327,7 +1385,6 @@ int FiniteElementExteriorCalculus::S_n(DenMatD &S,
 			cross_product(t1,
 						  temp_grad1[0],
 						  temp_grad1[1]);
-			// t1 = temp_grad1.row(0).cross(temp_grad1.row(1));
 
 			for (size_t j = i; j < edge_indices_size; ++j) {
 				EigVectorD t2;
@@ -1340,7 +1397,6 @@ int FiniteElementExteriorCalculus::S_n(DenMatD &S,
 				cross_product(t2,
 							  temp_grad2[0],
 							  temp_grad2[1]);
-				// t2 = temp_grad2.row(0).cross(temp_grad2.row(1));
 
 				S.coeffRef(i, j) = t1.dot(t2);
 				if (i != j) {
@@ -4264,6 +4320,7 @@ double FiniteElementExteriorCalculus::bb_error_H_div(int n,
 			b.coeffRef(j) = vol * inner_product/sum_weights;
 		}
 
+		std::cout<<b<<"\n\n";
 		EigVectorD coeffs = M.colPivHouseholderQr().solve(b);
 
 		for(size_t node_index = 0; node_index < nodes_size; ++node_index) {
@@ -4309,11 +4366,11 @@ double FiniteElementExteriorCalculus::bb_error_stiffness_H_curl(int n,
 		pybind11::gil_scoped_acquire acquire;
 	#endif
 
-	
+	return SUCCESS;
 }
 
 
-int FiniteElementExteriorCalculus::compute_bb_mass_matrices(int k,
+int FiniteElementExteriorCalculus::compute_bb_mass_matrices(int x,
 															int n) {
 
 	int num_edges;
@@ -4325,7 +4382,7 @@ int FiniteElementExteriorCalculus::compute_bb_mass_matrices(int k,
 				  complex_dimension + 1,
 				  3);
 
-	if (k == 0) {
+	if (x == 0) {
 		VectorTripletD triplet;
 
 		Vector2I alpha;
@@ -4514,7 +4571,7 @@ int FiniteElementExteriorCalculus::compute_bb_mass_matrices(int k,
 		bb_mass_matrices[0].makeCompressed();
 	}
 
-	else if (k == 1) {
+	else if (x == 1) {
 		VectorTripletD triplet;
 
 		Vector2I alpha;
@@ -4628,8 +4685,10 @@ int FiniteElementExteriorCalculus::compute_bb_mass_matrices(int k,
 
 		for (size_t i = 0; i < num_simplices[complex_dimension]; ++i) {
 			Vector2D pts;
+			VectorI simplex = simplices[complex_dimension][i];
+			std::sort(simplex.begin(), simplex.end());
 			for(size_t k = 0; k < complex_dimension + 1; ++k) {
-				pts.push_back(vertices[simplices[complex_dimension][i][k]]);
+				pts.push_back(vertices[simplex[k]]);
 			}
 
 			DenMatD mass_matrix;
@@ -4889,109 +4948,112 @@ int FiniteElementExteriorCalculus::compute_bb_mass_matrices(int k,
 		bb_mass_matrices[1].makeCompressed();
 	}
 
-	else if (k == 2) {
+	else if (x == 2) {
 		VectorTripletD triplet;
 
 		Vector2I alpha;
-		Vector2I temp_alpha;
-		VectorI ordered_basis_sizes;
-		VectorI sizes;
+	Vector2I temp_alpha;
+	VectorI ordered_basis_sizes;
+	VectorI sizes;
 
-		compute_index_sets_o(alpha,
+	compute_index_sets_o(alpha,
 						 3,
 						 3);
-		ordered_basis_sizes.push_back(alpha.size());
+	ordered_basis_sizes.push_back(alpha.size());
 
-		size_t total = alpha.size();
+	size_t total = alpha.size();
 
-		temp_alpha.clear();
-		compute_index_sets_p(temp_alpha,
-							 n,
-							 3);
-		size_t temp_alpha_size = temp_alpha.size();
+	temp_alpha.clear();
+	compute_index_sets_p(temp_alpha,
+						 n,
+						 3);
+	size_t temp_alpha_size = temp_alpha.size();
+	if (temp_alpha_size != 0) {
+		alpha.insert(alpha.end(), temp_alpha.begin(), temp_alpha.end());
+	}
+	ordered_basis_sizes.push_back(total + temp_alpha_size);
+	total += temp_alpha_size;
+
+	temp_alpha.clear();
+	compute_index_sets_o(temp_alpha,
+						 n + 2,
+						 4);
+	temp_alpha_size = temp_alpha.size();
+	for (int l = 0; l < 2; ++l) {	
 		if (temp_alpha_size != 0) {
 			alpha.insert(alpha.end(), temp_alpha.begin(), temp_alpha.end());
 		}
 		ordered_basis_sizes.push_back(total + temp_alpha_size);
 		total += temp_alpha_size;
-
-		temp_alpha.clear();
-		compute_index_sets_o(temp_alpha,
-							 n + 2,
-							 4);
-		temp_alpha_size = temp_alpha.size();
-		for (int l = 0; l < 2; ++l) {	
-			if (temp_alpha_size != 0) {
-				alpha.insert(alpha.end(), temp_alpha.begin(), temp_alpha.end());
-			}
-			total += temp_alpha_size;
+	}
+	int counter = 0; 
+	for (size_t j = 0; j < temp_alpha_size; ++j) {
+		if (temp_alpha[j][2] == 1) {
+			alpha.push_back(temp_alpha[j]);
+			++counter;
 		}
-		int counter = 0; 
-		for (size_t j = 0; j < temp_alpha_size; ++j) {
-			if (temp_alpha[j][2] == 1) {
-				alpha.push_back(temp_alpha[j]);
-				++counter;
-			}
-		}
-		ordered_basis_sizes.push_back(total + counter);
-		total += counter;
+	}
+	ordered_basis_sizes.push_back(total + counter);	
+	total += counter;
 
-		temp_alpha.clear();
-		compute_index_sets_p(temp_alpha,
-							 n,
-							 4);
-		temp_alpha_size = temp_alpha.size();
-		if (temp_alpha_size != 0) {
-			alpha.insert(alpha.end(), temp_alpha.begin(), temp_alpha.end());
-		}
-		ordered_basis_sizes.push_back(total + temp_alpha_size);
-		total += temp_alpha_size;
+	temp_alpha.clear();
+	compute_index_sets_p(temp_alpha,
+						 n,
+						 4);
+	temp_alpha_size = temp_alpha.size();
+	if (temp_alpha_size != 0) {
+		alpha.insert(alpha.end(), temp_alpha.begin(), temp_alpha.end());
+	}
+	ordered_basis_sizes.push_back(total + temp_alpha_size);
+	total += temp_alpha_size;
 
-		size_t alpha_size = alpha.size();
+	size_t alpha_size = alpha.size();
 
-		VectorI ndofs;
-		size_t size = 0;
+	VectorI ndofs;
+	size_t size = 0;
 
-		int temp = 1;
-		ndofs.push_back(temp);
-		sizes.push_back(size + temp * num_simplices[2]);
-		size += temp * num_simplices[2];
+	int temp = 1;
+	ndofs.push_back(temp);
+	sizes.push_back(size + temp * num_simplices[2]);
+	size += temp * num_simplices[2];
 
-		binomialCoeff(temp,
-					  n + 2,
-					  2);
-		temp = temp - 1;
-		ndofs.push_back(temp);
-		sizes.push_back(size + temp * num_simplices[2]);
-		size += temp * num_simplices[2];
+	binomialCoeff(temp,
+				  n + 2,
+				  2);
+	temp = temp - 1;
+	ndofs.push_back(temp);
+	sizes.push_back(size + temp * num_simplices[2]);
+	size += temp * num_simplices[2];
 
-		int temp1;
-		int temp2;
-		binomialCoeff(temp1,
-					  n + 1,
-					  3);
-		binomialCoeff(temp2,
-					  n,
-					  2);
-		temp = 2*temp1 + temp2;
-		ndofs.push_back(temp);
-		sizes.push_back(size + temp * num_simplices[3]);
-		size += temp * num_simplices[3];
+	int temp1;
+	int temp2;
+	binomialCoeff(temp1,
+				  n + 1,
+				  3);
+	binomialCoeff(temp2,
+				  n,
+				  2);
+	temp = 2*temp1 + temp2;
+	ndofs.push_back(temp);
+	sizes.push_back(size + temp * num_simplices[3]);
+	size += temp * num_simplices[3];
 
-		binomialCoeff(temp,
-					  n + 3,
-					  3);
-		temp = temp - 1;
-		ndofs.push_back(temp);
-		sizes.push_back(size + temp * num_simplices[3]);
-		size += temp * num_simplices[3];
+	binomialCoeff(temp,
+				  n + 3,
+				  3);
+	temp = temp - 1;
+	ndofs.push_back(temp);
+	sizes.push_back(size + temp * num_simplices[3]);
+	size += temp * num_simplices[3];
 
 		bb_mass_matrices[2].resize(size, size);
 
 		for (size_t i = 0; i < num_simplices[complex_dimension]; ++i) {
 			Vector2D pts;
+			VectorI simplex = simplices[complex_dimension][i];
+			std::sort(simplex.begin(), simplex.end());
 			for(size_t k = 0; k < complex_dimension + 1; ++k) {
-				pts.push_back(vertices[simplices[complex_dimension][i][k]]);
+				pts.push_back(vertices[simplex[k]]);
 			}
 
 			DenMatD mass_matrix;
@@ -5003,7 +5065,7 @@ int FiniteElementExteriorCalculus::compute_bb_mass_matrices(int k,
 
 			for (size_t j = 0; j < alpha_size; ++j) {
 				for (size_t k = j; k < alpha_size; ++k) {
-					if (k < ordered_basis_sizes[0] && j < ordered_basis_sizes[0]) {
+					if (j < ordered_basis_sizes[0] && k < ordered_basis_sizes[0]) {
 						triplet.push_back(TripletD(simplex_sub_simplices[i][2][j], simplex_sub_simplices[i][2][k], mass_matrix.coeffRef(j, k)));
 						if (j != k) {
 							triplet.push_back(TripletD(simplex_sub_simplices[i][2][k], simplex_sub_simplices[i][2][j], mass_matrix.coeffRef(k, j)));
@@ -5021,8 +5083,8 @@ int FiniteElementExteriorCalculus::compute_bb_mass_matrices(int k,
 						}
 					}
 					else if ((j < ordered_basis_sizes[0]) && 
-							(k >= ordered_basis_sizes[1] && k < ordered_basis_sizes[2])) {
-						int temp = ordered_basis_sizes[2] - ordered_basis_sizes[1];
+							(k >= ordered_basis_sizes[1] && k < ordered_basis_sizes[4])) {
+						int temp = ordered_basis_sizes[4] - ordered_basis_sizes[1];
 						int temp_index = std::floor((k - ordered_basis_sizes[1])/(temp));
 						int index = sizes[1] + ndofs[2] * simplex_sub_simplices[i][3][temp_index] + (k - ordered_basis_sizes[1])%ndofs[2];
 						
@@ -5032,14 +5094,14 @@ int FiniteElementExteriorCalculus::compute_bb_mass_matrices(int k,
 						}
 					}
 					else if ((j < ordered_basis_sizes[0]) && 
-							(k >= ordered_basis_sizes[2] && k < ordered_basis_sizes[3])) {
-						int temp = ordered_basis_sizes[3] - ordered_basis_sizes[2];
-						int temp_index = std::floor((k - ordered_basis_sizes[2])/(temp));
-						int index = sizes[2] + ndofs[3] * simplex_sub_simplices[i][3][temp_index] + (k - ordered_basis_sizes[2])%ndofs[3];
+							(k >= ordered_basis_sizes[4] && k < ordered_basis_sizes[5])) {
+						int temp = ordered_basis_sizes[5] - ordered_basis_sizes[4];
+						int temp_index = std::floor((k - ordered_basis_sizes[4])/(temp));
+						int index = sizes[2] + ndofs[3] * simplex_sub_simplices[i][3][temp_index] + (k - ordered_basis_sizes[4])%ndofs[3];
 						
-						triplet.push_back(TripletD(simplex_sub_simplices[i][0][j], index, mass_matrix.coeffRef(j, k)));
+						triplet.push_back(TripletD(simplex_sub_simplices[i][2][j], index, mass_matrix.coeffRef(j, k)));
 						if (j != k) {
-							triplet.push_back(TripletD(index, simplex_sub_simplices[i][0][j], mass_matrix.coeffRef(k, j)));
+							triplet.push_back(TripletD(index, simplex_sub_simplices[i][2][j], mass_matrix.coeffRef(k, j)));
 						}
 					}
 
@@ -5051,15 +5113,18 @@ int FiniteElementExteriorCalculus::compute_bb_mass_matrices(int k,
 						int index1 = sizes[0] + ndofs[1] * simplex_sub_simplices[i][2][temp_index1] + (j - ordered_basis_sizes[0])%ndofs[1];
 						int index2 = sizes[0] + ndofs[1] * simplex_sub_simplices[i][2][temp_index2] + (k - ordered_basis_sizes[0])%ndofs[1];
 						
+						if(index1 >=22 && index1<27 && index2 >=22 && index2<27) {
+							std::cout<<index1<<" "<<index2<<"\n";
+						}
 						triplet.push_back(TripletD(index1, index2, mass_matrix.coeffRef(j, k)));
 						if (j != k) {
 							triplet.push_back(TripletD(index2, index1, mass_matrix.coeffRef(k, j)));
 						}
 					}
 					else if ((j >= ordered_basis_sizes[0] && j < ordered_basis_sizes[1]) && 
-							(k >= ordered_basis_sizes[1] && k < ordered_basis_sizes[2])) {
+							(k >= ordered_basis_sizes[1] && k < ordered_basis_sizes[4])) {
 						int temp1 = ordered_basis_sizes[1] - ordered_basis_sizes[0];
-						int temp2 = ordered_basis_sizes[2] - ordered_basis_sizes[1];
+						int temp2 = ordered_basis_sizes[4] - ordered_basis_sizes[1];
 						int temp_index1 = std::floor((j - ordered_basis_sizes[0])/(temp1/num_faces));
 						int temp_index2 = std::floor((k - ordered_basis_sizes[1])/(temp2));
 						int index1 = sizes[0] + ndofs[1] * simplex_sub_simplices[i][2][temp_index1] + (j - ordered_basis_sizes[0])%ndofs[1];
@@ -5071,13 +5136,13 @@ int FiniteElementExteriorCalculus::compute_bb_mass_matrices(int k,
 						}
 					}
 					else if ((j >= ordered_basis_sizes[0] && j < ordered_basis_sizes[1]) && 
-							(k >= ordered_basis_sizes[2] && k < ordered_basis_sizes[3])) {
+							(k >= ordered_basis_sizes[4] && k < ordered_basis_sizes[5])) {
 						int temp1 = ordered_basis_sizes[1] - ordered_basis_sizes[0];
-						int temp2 = ordered_basis_sizes[3] - ordered_basis_sizes[2];
+						int temp2 = ordered_basis_sizes[5] - ordered_basis_sizes[4];
 						int temp_index1 = std::floor((j - ordered_basis_sizes[0])/(temp1/num_faces));
-						int temp_index2 = std::floor((k - ordered_basis_sizes[2])/(temp2));
+						int temp_index2 = std::floor((k - ordered_basis_sizes[4])/(temp2));
 						int index1 = sizes[0] + ndofs[1] * simplex_sub_simplices[i][2][temp_index1] + (j - ordered_basis_sizes[0])%ndofs[1];
-						int index2 = sizes[2] + ndofs[3] * simplex_sub_simplices[i][3][temp_index2] + (k - ordered_basis_sizes[2])%ndofs[3];
+						int index2 = sizes[2] + ndofs[3] * simplex_sub_simplices[i][3][temp_index2] + (k - ordered_basis_sizes[4])%ndofs[3];
 						
 						triplet.push_back(TripletD(index1, index2, mass_matrix.coeffRef(j, k)));
 						if (j != k) {
@@ -5085,10 +5150,10 @@ int FiniteElementExteriorCalculus::compute_bb_mass_matrices(int k,
 						}
 					}
 
-					else if ((j >= ordered_basis_sizes[1] && j < ordered_basis_sizes[2]) && 
-							(k >= ordered_basis_sizes[1] && k < ordered_basis_sizes[2])) {
-						int temp1 = ordered_basis_sizes[2] - ordered_basis_sizes[1];
-						int temp2 = ordered_basis_sizes[2] - ordered_basis_sizes[1];
+					else if ((j >= ordered_basis_sizes[1] && j < ordered_basis_sizes[4]) && 
+							(k >= ordered_basis_sizes[1] && k < ordered_basis_sizes[4])) {
+						int temp1 = ordered_basis_sizes[4] - ordered_basis_sizes[1];
+						int temp2 = ordered_basis_sizes[4] - ordered_basis_sizes[1];
 						int temp_index1 = std::floor((j - ordered_basis_sizes[1])/(temp1));
 						int temp_index2 = std::floor((k - ordered_basis_sizes[1])/(temp2));
 						int index1 = sizes[1] + ndofs[2] * simplex_sub_simplices[i][3][temp_index1] + (j - ordered_basis_sizes[1])%ndofs[2];
@@ -5099,14 +5164,14 @@ int FiniteElementExteriorCalculus::compute_bb_mass_matrices(int k,
 							triplet.push_back(TripletD(index2, index1, mass_matrix.coeffRef(k, j)));
 						}
 					}
-					else if ((j >= ordered_basis_sizes[1] && j < ordered_basis_sizes[2]) && 
-							(k >= ordered_basis_sizes[2] && k < ordered_basis_sizes[3])) {
-						int temp1 = ordered_basis_sizes[2] - ordered_basis_sizes[1];
-						int temp2 = ordered_basis_sizes[3] - ordered_basis_sizes[2];
+					else if ((j >= ordered_basis_sizes[1] && j < ordered_basis_sizes[4]) && 
+							(k >= ordered_basis_sizes[4] && k < ordered_basis_sizes[5])) {
+						int temp1 = ordered_basis_sizes[4] - ordered_basis_sizes[1];
+						int temp2 = ordered_basis_sizes[5] - ordered_basis_sizes[4];
 						int temp_index1 = std::floor((j - ordered_basis_sizes[1])/(temp1));
-						int temp_index2 = std::floor((k - ordered_basis_sizes[2])/(temp2));
+						int temp_index2 = std::floor((k - ordered_basis_sizes[4])/(temp2));
 						int index1 = sizes[1] + ndofs[2] * simplex_sub_simplices[i][3][temp_index1] + (j - ordered_basis_sizes[1])%ndofs[2];
-						int index2 = sizes[2] + ndofs[3] * simplex_sub_simplices[i][3][temp_index2] + (k - ordered_basis_sizes[2])%ndofs[3];
+						int index2 = sizes[2] + ndofs[3] * simplex_sub_simplices[i][3][temp_index2] + (k - ordered_basis_sizes[4])%ndofs[3];
 						
 						triplet.push_back(TripletD(index1, index2, mass_matrix.coeffRef(j, k)));
 						if (j != k) {
@@ -5114,14 +5179,14 @@ int FiniteElementExteriorCalculus::compute_bb_mass_matrices(int k,
 						}
 					}
 
-					else if ((j >= ordered_basis_sizes[2] && j < ordered_basis_sizes[3]) && 
-							(k >= ordered_basis_sizes[2] && k < ordered_basis_sizes[3])) {
-						int temp1 = ordered_basis_sizes[3] - ordered_basis_sizes[2];
-						int temp2 = ordered_basis_sizes[3] - ordered_basis_sizes[2];
-						int temp_index1 = std::floor((j - ordered_basis_sizes[2])/(temp1));
-						int temp_index2 = std::floor((k - ordered_basis_sizes[2])/(temp2));
-						int index1 = sizes[2] + ndofs[3] * simplex_sub_simplices[i][3][temp_index1] + (j - ordered_basis_sizes[2])%ndofs[3];
-						int index2 = sizes[2] + ndofs[3] * simplex_sub_simplices[i][3][temp_index2] + (k - ordered_basis_sizes[2])%ndofs[3];
+					else if ((j >= ordered_basis_sizes[4] && j < ordered_basis_sizes[5]) && 
+							(k >= ordered_basis_sizes[4] && k < ordered_basis_sizes[5])) {
+						int temp1 = ordered_basis_sizes[5] - ordered_basis_sizes[4];
+						int temp2 = ordered_basis_sizes[5] - ordered_basis_sizes[4];
+						int temp_index1 = std::floor((j - ordered_basis_sizes[4])/(temp1));
+						int temp_index2 = std::floor((k - ordered_basis_sizes[4])/(temp2));
+						int index1 = sizes[2] + ndofs[3] * simplex_sub_simplices[i][3][temp_index1] + (j - ordered_basis_sizes[4])%ndofs[3];
+						int index2 = sizes[2] + ndofs[3] * simplex_sub_simplices[i][3][temp_index2] + (k - ordered_basis_sizes[4])%ndofs[3];
 						
 						triplet.push_back(TripletD(index1, index2, mass_matrix.coeffRef(j, k)));
 						if (j != k) {
@@ -5227,7 +5292,7 @@ double FiniteElementExteriorCalculus::bb_error_H_1_global(int n,
 
 		Vector2D pts;
 		VectorI simplex = simplices[N-1][i];
-		std::sort(simplex.begin(), simplex.end());
+		// std::sort(simplex.begin(), simplex.end());
 		for(size_t k = 0; k < N; ++k) {
 			pts.push_back(vertices[simplex[k]]);
 		}
@@ -5276,7 +5341,7 @@ double FiniteElementExteriorCalculus::bb_error_H_1_global(int n,
 
 		Vector2D pts;
 		VectorI simplex = simplices[N-1][i];
-		std::sort(simplex.begin(), simplex.end());
+		// std::sort(simplex.begin(), simplex.end());
 		for(size_t k = 0; k < N; ++k) {
 			pts.push_back(vertices[simplex[k]]);
 		}
@@ -5306,6 +5371,724 @@ double FiniteElementExteriorCalculus::bb_error_H_1_global(int n,
 			}
 
 			e += weights[node_index] * pow(get_analytical_soln(points) - f_dash, 2);
+		}
+
+		#ifdef MULTICORE
+			#pragma omp critical
+		#endif
+		E += vol*e/sum_weights;
+	}
+
+	E = sqrt(E);
+	return E;
+}
+
+
+double FiniteElementExteriorCalculus::bb_error_H_curl_global(int n,
+												   		     int q_order) {
+
+	#ifdef PYTHON
+		pybind11::gil_scoped_acquire acquire;
+	#endif
+
+	size_t N = num_simplices.size();
+	double E = 0.0;
+	size_t embed_dim = vertices[0].size();
+
+	Vector2D nodes;
+	VectorD weights;
+	std::string data = "./data/quadrature/d" + std::to_string(N-1) + "o" + std::to_string(q_order) + ".txt";
+	read_quadratures(nodes,
+					 weights,
+					 data);
+	size_t nodes_size = nodes.size();
+
+	double sum_weights = std::accumulate(weights.begin(), weights.end(), 0.0);
+
+	Vector2I alpha;
+	Vector2I temp_alpha;
+	VectorI ordered_basis_sizes;
+	VectorI sizes;
+
+	compute_index_sets_o(alpha,
+						 2,
+						 2);
+	ordered_basis_sizes.push_back(alpha.size());
+
+	size_t total = alpha.size();
+	for (int i = 2; i <= 4; ++i) {
+		temp_alpha.clear();
+		compute_index_sets_o(temp_alpha,
+							 n + 1,
+							 i);
+		
+		size_t temp_alpha_size = temp_alpha.size();
+		if (temp_alpha_size != 0) {
+			alpha.insert(alpha.end(), temp_alpha.begin(), temp_alpha.end());
+		}
+		ordered_basis_sizes.push_back(total + temp_alpha_size);
+		total += temp_alpha_size;
+			
+		if (i == 3) {
+			temp_alpha.clear();
+			compute_index_sets_p(temp_alpha,
+								 n,
+								 i);
+			
+			size_t temp_alpha_size = temp_alpha.size();
+			if (temp_alpha_size != 0) {
+				alpha.insert(alpha.end(), temp_alpha.begin(), temp_alpha.end());
+			}
+			ordered_basis_sizes.push_back(total + temp_alpha_size);
+			total += temp_alpha_size;
+		}
+
+		else if (i == 4) {
+			temp_alpha.clear();
+			compute_index_sets_o(temp_alpha,
+								 n + 2,
+								 i);
+			
+			size_t temp_alpha_size = temp_alpha.size();
+
+			for (int l = 0; l < 2; ++l) {	
+				if (temp_alpha_size != 0) {
+					alpha.insert(alpha.end(), temp_alpha.begin(), temp_alpha.end());
+				}
+				ordered_basis_sizes.push_back(total + temp_alpha_size);
+				total += temp_alpha_size;
+			}
+
+			size_t counter = 0; 
+			for (size_t j = 0; j < temp_alpha_size; ++j) {
+				if (temp_alpha[j][2] == 1) {
+					alpha.push_back(temp_alpha[j]);
+					++counter;
+				}
+			}
+
+			ordered_basis_sizes.push_back(total + counter);	
+			total += counter;
+		}
+	}
+
+	size_t alpha_size = alpha.size();
+
+	VectorI ndofs;
+	size_t size = 0;
+	for (size_t i = 0; i < complex_dimension + 1; ++i) {
+		int temp;
+		binomialCoeff(temp,
+					  n,
+					  i);
+		ndofs.push_back(temp);
+		sizes.push_back(size + temp * num_simplices[std::max(1, (int)i)]);
+		size += temp * num_simplices[std::max(1, (int)i)];
+
+		if (i == 2) {
+			temp = 0;
+			binomialCoeff(temp,
+						  n+2,
+						  2);
+			temp = temp - 1;
+			ndofs.push_back(temp);
+			sizes.push_back(size + temp * num_simplices[std::max(1, (int)i)]);
+			size += temp * num_simplices[std::max(1, (int)i)];
+		}
+
+		else if (i == 3) {
+			int temp1;
+			int temp2;
+			binomialCoeff(temp1,
+						  n+1,
+						  3);
+			binomialCoeff(temp2,
+						  n,
+						  2);
+			temp = 2*temp1 + temp2;
+			ndofs.push_back(temp);
+			sizes.push_back(size + temp * num_simplices[std::max(1, (int)i)]);
+			size += temp * num_simplices[std::max(1, (int)i)];
+		}
+	}
+
+	compute_bb_mass_matrices(1, n);
+
+	EigVectorD b = EigVectorD::Zero(size);
+	Vector2DenMatD global_basis_elements;
+
+	Vector2I all_faces;
+	compute_index_sets_o(all_faces,
+						 3,
+						 3);
+
+	#ifdef MULTICORE
+		#pragma omp parallel for
+	#endif
+	for(size_t s = 0; s < num_simplices[N-1]; ++s) {
+
+		Vector2D pts;
+		VectorI simplex = simplices[N-1][s];
+		std::sort(simplex.begin(), simplex.end());
+		for(size_t k = 0; k < N; ++k) {
+			pts.push_back(vertices[simplex[k]]);
+		}
+		double vol = get_simplex_volume(pts);
+
+		DenMatD grad_bary_coords;
+		barycentric_gradients(grad_bary_coords,
+							  pts);
+
+		VectorDenMatD basis_elements;
+		for(int i = 0; i < (int)alpha_size; ++i) {
+			DenMatD temp_basis_elements(nodes_size, embed_dim);
+
+			VectorI local_indices;
+			for (int j = 0; j < 4; ++j) {
+				if (alpha[i][j] > 0) {
+					local_indices.push_back(j);
+				}
+			}
+			size_t local_indices_size = local_indices.size();
+			
+			for(size_t j = 0; j < nodes_size; ++j) {
+				if (i < ordered_basis_sizes[0]) {
+					EigVectorD omega;
+
+					DenMatD temp_grad_bary_coords(local_indices_size, embed_dim);
+					VectorD temp_bary_coords;
+
+					for (size_t k = 0; k < local_indices_size; ++k) {
+						temp_bary_coords.push_back(nodes[j][local_indices[k]]);
+						temp_grad_bary_coords.row(k) = grad_bary_coords.row(local_indices[k]);
+					}
+					
+					omega_ij(omega,
+							 temp_bary_coords,
+							 temp_grad_bary_coords);
+					
+					temp_basis_elements.row(j) = omega;
+				}
+				else if ((i >= ordered_basis_sizes[0] && i < ordered_basis_sizes[1]) ||
+						 (i >= ordered_basis_sizes[1] && i < ordered_basis_sizes[2]) ||
+						 (i >= ordered_basis_sizes[3] && i < ordered_basis_sizes[4])) {
+					EigVectorD grad_b;
+
+					grad_B(grad_b,
+						   alpha[i],
+						   n + 1,
+						   nodes[j],
+						   grad_bary_coords);
+
+					temp_basis_elements.row(j) = grad_b;
+				}
+				else if (i >= ordered_basis_sizes[2] && i < ordered_basis_sizes[3]) {
+					EigVectorD phi;
+
+					int E_nF_size = ordered_basis_sizes[3] - ordered_basis_sizes[2];
+					int face_index = std::floor((i - ordered_basis_sizes[2])/(E_nF_size/4));
+					VectorI face = all_faces[face_index];
+					
+					VectorI temp_local_indices;
+
+					for (int k = 0; k < 4; ++k) {
+						if (face[k] > 0) {
+							temp_local_indices.push_back(k);
+						}
+					}
+
+					phi_FT(phi,
+						   alpha[i],
+						   n,
+						   nodes[j],
+						   grad_bary_coords,
+						   temp_local_indices);
+
+					temp_basis_elements.row(j) = phi;
+
+				}
+				else if (i >= ordered_basis_sizes[4] && i < ordered_basis_sizes[5]) {
+					EigVectorD psi;
+
+					psi_T(psi,
+						   alpha[i],
+						   n + 1,
+						   0,
+						   nodes[j],
+						   grad_bary_coords);
+
+					temp_basis_elements.row(j) = psi;
+				}
+				else if (i >= ordered_basis_sizes[5] && i < ordered_basis_sizes[6]) {
+					EigVectorD psi;
+
+					psi_T(psi,
+						   alpha[i],
+						   n + 1,
+						   1,
+						   nodes[j],
+						   grad_bary_coords);
+
+					temp_basis_elements.row(j) = psi;
+				}
+				else if (i >= ordered_basis_sizes[6] && i < ordered_basis_sizes[7]) {
+					EigVectorD psi;
+
+					psi_T(psi,
+						   alpha[i],
+						   n + 1,
+						   2,
+						   nodes[j],
+						   grad_bary_coords);
+
+					temp_basis_elements.row(j) = psi;
+				}
+			}
+
+			basis_elements.push_back(temp_basis_elements);
+		}
+
+		global_basis_elements.push_back(basis_elements);
+
+		for(size_t j = 0; j < alpha_size; ++j) {
+			double inner_product = 0.0;
+
+			for(size_t k = 0; k < nodes_size; ++k) {
+				VectorD vec(embed_dim, 0.0);
+
+				for(size_t v = 0; v < N; ++v) {
+					for(size_t l = 0; l < embed_dim; ++l) {
+						vec[l] += pts[v][l] * nodes[k][v];
+					}
+				}
+
+				VectorD temp_vec;
+				get_analytical_soln_vec(temp_vec,
+										vec);
+				EigVectorD f(embed_dim);
+				for (size_t v = 0; v < embed_dim; ++v) {
+					f.coeffRef(v) = temp_vec[v];
+				}
+				inner_product += weights[k] * f.dot(basis_elements[j].row(k));
+			}
+
+			int index;
+			get_global_index(index,
+							 1,
+							 s,
+							 j,
+							 ordered_basis_sizes,
+							 ndofs,
+							 sizes,
+							 simplex_sub_simplices,
+							 complex_dimension);
+			#ifdef MULTICORE
+				#pragma omp critical
+			#endif
+			b.coeffRef(index) += vol * inner_product/sum_weights;
+		}
+	}
+
+	Eigen::SimplicialLLT<SpMatD> solver;
+	EigVectorD coeffs = solver.compute(bb_mass_matrices[1]).solve(b);
+
+	#ifdef MULTICORE
+		#pragma omp parallel for
+	#endif
+	for(size_t s = 0; s < num_simplices[N-1]; ++s) {
+		double e = 0;
+
+		Vector2D pts;
+		VectorI simplex = simplices[N-1][s];
+		std::sort(simplex.begin(), simplex.end());
+		for(size_t k = 0; k < N; ++k) {
+			pts.push_back(vertices[simplex[k]]);
+		}
+		double vol = get_simplex_volume(pts);
+
+		for(size_t node_index = 0; node_index < nodes_size; ++node_index) {
+
+			EigVectorD f_dash = EigVectorD::Zero(embed_dim);
+			for (size_t j = 0; j < alpha_size; ++j) {
+				int index;
+				get_global_index(index,
+								 1,
+								 s,
+								 j,
+								 ordered_basis_sizes,
+								 ndofs,
+								 sizes,
+								 simplex_sub_simplices,
+								 complex_dimension);
+				f_dash += coeffs.coeffRef(index) * global_basis_elements[s][j].row(node_index);
+			}
+
+			VectorD points(embed_dim, 0.0);
+			for(size_t v = 0; v < N; ++v) {
+				for(size_t l = 0; l < embed_dim; ++l) {
+					points[l] += pts[v][l] * nodes[node_index][v];
+				}
+			}
+
+			VectorD temp_vec;
+			get_analytical_soln_vec(temp_vec,
+									points);
+			EigVectorD f(embed_dim);
+			for (size_t v = 0; v < embed_dim; ++v) {
+				f.coeffRef(v) = temp_vec[v];
+			}
+
+			e += weights[node_index] * pow((f - f_dash).norm(), 2);
+		}
+
+		#ifdef MULTICORE
+			#pragma omp critical
+		#endif
+		E += vol*e/sum_weights;
+	}
+
+	E = sqrt(E);
+	return E;
+}
+
+
+double FiniteElementExteriorCalculus::bb_error_H_div_global(int n,
+												   		     int q_order) {
+
+	#ifdef PYTHON
+		pybind11::gil_scoped_acquire acquire;
+	#endif
+
+	size_t N = num_simplices.size();
+	double E = 0.0;
+	size_t embed_dim = vertices[0].size();
+
+	Vector2D nodes;
+	VectorD weights;
+	std::string data = "./data/quadrature/d" + std::to_string(N-1) + "o" + std::to_string(q_order) + ".txt";
+	read_quadratures(nodes,
+					 weights,
+					 data);
+	size_t nodes_size = nodes.size();
+
+	double sum_weights = std::accumulate(weights.begin(), weights.end(), 0.0);
+
+	Vector2I alpha;
+	Vector2I temp_alpha;
+	VectorI ordered_basis_sizes;
+	VectorI sizes;
+
+	compute_index_sets_o(alpha,
+						 3,
+						 3);
+	ordered_basis_sizes.push_back(alpha.size());
+
+	size_t total = alpha.size();
+
+	temp_alpha.clear();
+	compute_index_sets_p(temp_alpha,
+						 n,
+						 3);
+	size_t temp_alpha_size = temp_alpha.size();
+	if (temp_alpha_size != 0) {
+		alpha.insert(alpha.end(), temp_alpha.begin(), temp_alpha.end());
+	}
+	ordered_basis_sizes.push_back(total + temp_alpha_size);
+	total += temp_alpha_size;
+
+	temp_alpha.clear();
+	compute_index_sets_o(temp_alpha,
+						 n + 2,
+						 4);
+	temp_alpha_size = temp_alpha.size();
+	for (int l = 0; l < 2; ++l) {	
+		if (temp_alpha_size != 0) {
+			alpha.insert(alpha.end(), temp_alpha.begin(), temp_alpha.end());
+		}
+		ordered_basis_sizes.push_back(total + temp_alpha_size);
+		total += temp_alpha_size;
+	}
+	int counter = 0; 
+	for (size_t j = 0; j < temp_alpha_size; ++j) {
+		if (temp_alpha[j][2] == 1) {
+			alpha.push_back(temp_alpha[j]);
+			++counter;
+		}
+	}
+	ordered_basis_sizes.push_back(total + counter);	
+	total += counter;
+
+	temp_alpha.clear();
+	compute_index_sets_p(temp_alpha,
+						 n,
+						 4);
+	temp_alpha_size = temp_alpha.size();
+	if (temp_alpha_size != 0) {
+		alpha.insert(alpha.end(), temp_alpha.begin(), temp_alpha.end());
+	}
+	ordered_basis_sizes.push_back(total + temp_alpha_size);
+	total += temp_alpha_size;
+
+	size_t alpha_size = alpha.size();
+
+	VectorI ndofs;
+	size_t size = 0;
+
+	int temp = 1;
+	ndofs.push_back(temp);
+	sizes.push_back(size + temp * num_simplices[2]);
+	size += temp * num_simplices[2];
+
+	binomialCoeff(temp,
+				  n + 2,
+				  2);
+	temp = temp - 1;
+	ndofs.push_back(temp);
+	sizes.push_back(size + temp * num_simplices[2]);
+	size += temp * num_simplices[2];
+
+	int temp1;
+	int temp2;
+	binomialCoeff(temp1,
+				  n + 1,
+				  3);
+	binomialCoeff(temp2,
+				  n,
+				  2);
+	temp = 2*temp1 + temp2;
+	ndofs.push_back(temp);
+	sizes.push_back(size + temp * num_simplices[3]);
+	size += temp * num_simplices[3];
+
+	binomialCoeff(temp,
+				  n + 3,
+				  3);
+	temp = temp - 1;
+	ndofs.push_back(temp);
+	sizes.push_back(size + temp * num_simplices[3]);
+	size += temp * num_simplices[3];
+
+	compute_bb_mass_matrices(2, n);
+
+	EigVectorD b = EigVectorD::Zero(size);
+	Vector2DenMatD global_basis_elements;
+
+	Vector2I all_faces;
+	compute_index_sets_o(all_faces,
+						 3,
+						 3);
+
+	#ifdef MULTICORE
+		#pragma omp parallel for
+	#endif
+	for(size_t s = 0; s < num_simplices[N-1]; ++s) {
+
+		Vector2D pts;
+		VectorI simplex = simplices[N-1][s];
+		std::sort(simplex.begin(), simplex.end());
+		for(size_t k = 0; k < N; ++k) {
+			pts.push_back(vertices[simplex[k]]);
+		}
+		double vol = get_simplex_volume(pts);
+
+		DenMatD grad_bary_coords;
+		barycentric_gradients(grad_bary_coords,
+							  pts);
+
+		VectorDenMatD basis_elements;
+		for(int i = 0; i < (int)alpha_size; ++i) {
+			DenMatD temp_basis_elements(nodes_size, embed_dim);
+			
+			for(size_t j = 0; j < nodes_size; ++j) {
+				if (i < ordered_basis_sizes[0]) {
+					EigVectorD chi;
+
+					VectorI local_indices;
+					for (int j = 0; j < 4; ++j) {
+						if (alpha[i][j] > 0) {
+							local_indices.push_back(j);
+						}
+					}
+					
+					chi_l(chi,
+						  alpha[i],
+						  nodes[j],
+						  grad_bary_coords,
+						  local_indices);
+					
+					temp_basis_elements.row(j) = chi;
+				}
+				else if (i >= ordered_basis_sizes[0] && i < ordered_basis_sizes[1]) {
+					EigVectorD curl_phi;
+
+					int E_nF_size = ordered_basis_sizes[1] - ordered_basis_sizes[0];
+					int face_index = std::floor((i - ordered_basis_sizes[0])/(E_nF_size/4));
+					VectorI face = all_faces[face_index];
+					
+					VectorI temp_local_indices;
+
+					for (int k = 0; k < 4; ++k) {
+						if (face[k] > 0) {
+							temp_local_indices.push_back(k);
+						}
+					}
+
+					curl_phi_FT(curl_phi,
+							   alpha[i],
+							   n,
+							   nodes[j],
+							   grad_bary_coords,
+							   temp_local_indices);
+
+					temp_basis_elements.row(j) = curl_phi;
+				}
+				else if (i >= ordered_basis_sizes[1] && i < ordered_basis_sizes[2]) {
+					EigVectorD curl_psi;
+
+					curl_psi_T(curl_psi,
+							   alpha[i],
+							   n + 1,
+							   0,
+							   nodes[j],
+							   grad_bary_coords);
+
+					temp_basis_elements.row(j) = curl_psi;
+				}
+				else if (i >= ordered_basis_sizes[2] && i < ordered_basis_sizes[3]) {
+					EigVectorD curl_psi;
+
+					curl_psi_T(curl_psi,
+							   alpha[i],
+							   n + 1,
+							   1,
+							   nodes[j],
+							   grad_bary_coords);
+
+					temp_basis_elements.row(j) = curl_psi;
+				}
+				else if (i >= ordered_basis_sizes[3] && i < ordered_basis_sizes[4]) {
+					EigVectorD curl_psi;
+
+					curl_psi_T(curl_psi,
+							   alpha[i],
+							   n + 1,
+							   2,
+							   nodes[j],
+							   grad_bary_coords);
+
+					temp_basis_elements.row(j) = curl_psi;
+				}
+				else if (i >= ordered_basis_sizes[4] && i < ordered_basis_sizes[5]) {
+					EigVectorD upsi;
+
+					upsilon(upsi,
+						    alpha[i],
+						    n,
+						    nodes[j],
+						    grad_bary_coords);
+
+					temp_basis_elements.row(j) = upsi;
+				}
+			}
+
+			basis_elements.push_back(temp_basis_elements);
+		}
+
+		#ifdef MULTICORE
+			#pragma omp critical
+		#endif
+		global_basis_elements.push_back(basis_elements);
+
+		for(size_t j = 0; j < alpha_size; ++j) {
+			double inner_product = 0.0;
+
+			for(size_t k = 0; k < nodes_size; ++k) {
+				VectorD vec(embed_dim, 0.0);
+
+				for(size_t v = 0; v < N; ++v) {
+					for(size_t l = 0; l < embed_dim; ++l) {
+						vec[l] += pts[v][l] * nodes[k][v];
+					}
+				}
+
+				VectorD temp_vec;
+				get_analytical_soln_vec(temp_vec,
+										vec);
+				EigVectorD f(embed_dim);
+				for (size_t v = 0; v < embed_dim; ++v) {
+					f.coeffRef(v) = temp_vec[v];
+				}
+				inner_product += weights[k] * f.dot(basis_elements[j].row(k));
+			}
+
+			int index;
+			get_global_index(index,
+							 2,
+							 s,
+							 j,
+							 ordered_basis_sizes,
+							 ndofs,
+							 sizes,
+							 simplex_sub_simplices,
+							 complex_dimension);
+			#ifdef MULTICORE
+				#pragma omp critical
+			#endif
+			b.coeffRef(index) += vol * inner_product/sum_weights;
+		}
+	}
+
+	Eigen::SimplicialLLT<SpMatD> solver;
+	EigVectorD coeffs = solver.compute(bb_mass_matrices[2]).solve(b);
+	// std::cout<<coeffs<<"\n";
+
+	#ifdef MULTICORE
+		#pragma omp parallel for
+	#endif
+	for(size_t s = 0; s < num_simplices[N-1]; ++s) {
+		double e = 0;
+
+		Vector2D pts;
+		VectorI simplex = simplices[N-1][s];
+		std::sort(simplex.begin(), simplex.end());
+		for(size_t k = 0; k < N; ++k) {
+			pts.push_back(vertices[simplex[k]]);
+		}
+		double vol = get_simplex_volume(pts);
+
+		for(size_t node_index = 0; node_index < nodes_size; ++node_index) {
+
+			EigVectorD f_dash = EigVectorD::Zero(embed_dim);
+			for (size_t j = 0; j < alpha_size; ++j) {
+				int index;
+				get_global_index(index,
+								 2,
+								 s,
+								 j,
+								 ordered_basis_sizes,
+								 ndofs,
+								 sizes,
+								 simplex_sub_simplices,
+								 complex_dimension);
+				f_dash += coeffs.coeffRef(index) * global_basis_elements[s][j].row(node_index);
+			}
+
+			VectorD points(embed_dim, 0.0);
+			for(size_t v = 0; v < N; ++v) {
+				for(size_t l = 0; l < embed_dim; ++l) {
+					points[l] += pts[v][l] * nodes[node_index][v];
+				}
+			}
+
+			VectorD temp_vec;
+			get_analytical_soln_vec(temp_vec,
+									points);
+			EigVectorD f(embed_dim);
+			for (size_t v = 0; v < embed_dim; ++v) {
+				f.coeffRef(v) = temp_vec[v];
+			}
+
+			e += weights[node_index] * pow((f - f_dash).norm(), 2);
 		}
 
 		#ifdef MULTICORE

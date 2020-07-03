@@ -14,6 +14,22 @@
 // first thing Eigen does: stop the compiler from committing suicide
 #include "src/Core/util/DisableStupidWarnings.h"
 
+#if defined(__CUDACC__) && !defined(EIGEN_NO_CUDA)
+  #define EIGEN_CUDACC __CUDACC__
+#endif
+
+#if defined(__CUDA_ARCH__) && !defined(EIGEN_NO_CUDA)
+  #define EIGEN_CUDA_ARCH __CUDA_ARCH__
+#endif
+
+#if defined(__CUDACC_VER_MAJOR__) && (__CUDACC_VER_MAJOR__ >= 9)
+#define EIGEN_CUDACC_VER  ((__CUDACC_VER_MAJOR__ * 10000) + (__CUDACC_VER_MINOR__ * 100))
+#elif defined(__CUDACC_VER__)
+#define EIGEN_CUDACC_VER __CUDACC_VER__
+#else
+#define EIGEN_CUDACC_VER 0
+#endif
+
 // Handle NVCC/CUDA/SYCL
 #if defined(__CUDACC__) || defined(__SYCL_DEVICE_ONLY__)
   // Do not try asserts on CUDA and SYCL!
@@ -37,14 +53,16 @@
     #endif
 
     #define EIGEN_DEVICE_FUNC __host__ __device__
-    // We need math_functions.hpp to ensure that that EIGEN_USING_STD_MATH macro
+    // We need cuda_runtime.h to ensure that that EIGEN_USING_STD_MATH macro
     // works properly on the device side
-    #include <math_functions.hpp>
+    #include <cuda_runtime.h>
   #else
     #define EIGEN_DEVICE_FUNC
   #endif
+
 #else
   #define EIGEN_DEVICE_FUNC
+
 #endif
 
 // When compiling CUDA device code with NVCC, pull in math functions from the
@@ -141,26 +159,20 @@
     #endif
     #ifdef __AVX2__
       #define EIGEN_VECTORIZE_AVX2
-      #define EIGEN_VECTORIZE_AVX
-      #define EIGEN_VECTORIZE_SSE3
-      #define EIGEN_VECTORIZE_SSSE3
-      #define EIGEN_VECTORIZE_SSE4_1
-      #define EIGEN_VECTORIZE_SSE4_2
     #endif
     #ifdef __FMA__
       #define EIGEN_VECTORIZE_FMA
     #endif
-    #if defined(__AVX512F__)
+    #if defined(__AVX512F__) && defined(EIGEN_ENABLE_AVX512)
       #define EIGEN_VECTORIZE_AVX512
       #define EIGEN_VECTORIZE_AVX2
       #define EIGEN_VECTORIZE_AVX
       #define EIGEN_VECTORIZE_FMA
-      #define EIGEN_VECTORIZE_SSE3
-      #define EIGEN_VECTORIZE_SSSE3
-      #define EIGEN_VECTORIZE_SSE4_1
-      #define EIGEN_VECTORIZE_SSE4_2
       #ifdef __AVX512DQ__
         #define EIGEN_VECTORIZE_AVX512DQ
+      #endif
+      #ifdef __AVX512ER__
+        #define EIGEN_VECTORIZE_AVX512ER
       #endif
     #endif
 
@@ -236,7 +248,7 @@
 #if defined __CUDACC__
   #define EIGEN_VECTORIZE_CUDA
   #include <vector_types.h>
-  #if defined __CUDACC_VER__ && __CUDACC_VER__ >= 70500
+  #if EIGEN_CUDACC_VER >= 70500
     #define EIGEN_HAS_CUDA_FP16
   #endif
 #endif
@@ -288,15 +300,6 @@
 // required for __cpuid, needs to be included after cmath
 #if EIGEN_COMP_MSVC && EIGEN_ARCH_i386_OR_x86_64 && !EIGEN_OS_WINCE
   #include <intrin.h>
-#endif
-
-#if defined(__SYCL_DEVICE_ONLY__)
-  #undef min
-  #undef max
-  #undef isnan
-  #undef isinf
-  #undef isfinite
-  #include <SYCL/sycl.hpp>
 #endif
 
 /** \brief Namespace containing all symbols from the %Eigen library. */
@@ -363,21 +366,17 @@ using std::ptrdiff_t;
 #include "src/Core/util/StaticAssert.h"
 #include "src/Core/util/XprHelper.h"
 #include "src/Core/util/Memory.h"
-#include "src/Core/util/IntegralConstant.h"
-#include "src/Core/util/SymbolicIndex.h"
-
 
 #include "src/Core/NumTraits.h"
 #include "src/Core/MathFunctions.h"
 #include "src/Core/GenericPacketMath.h"
 #include "src/Core/MathFunctionsImpl.h"
+#include "src/Core/arch/Default/ConjHelper.h"
 
 #if defined EIGEN_VECTORIZE_AVX512
   #include "src/Core/arch/SSE/PacketMath.h"
   #include "src/Core/arch/AVX/PacketMath.h"
   #include "src/Core/arch/AVX512/PacketMath.h"
-  #include "src/Core/arch/SSE/MathFunctions.h"
-  #include "src/Core/arch/AVX/MathFunctions.h"
   #include "src/Core/arch/AVX512/MathFunctions.h"
 #elif defined EIGEN_VECTORIZE_AVX
   // Use AVX for floats and doubles, SSE for integers
@@ -388,6 +387,7 @@ using std::ptrdiff_t;
   #include "src/Core/arch/AVX/MathFunctions.h"
   #include "src/Core/arch/AVX/Complex.h"
   #include "src/Core/arch/AVX/TypeCasting.h"
+  #include "src/Core/arch/SSE/TypeCasting.h"
 #elif defined EIGEN_VECTORIZE_SSE
   #include "src/Core/arch/SSE/PacketMath.h"
   #include "src/Core/arch/SSE/MathFunctions.h"
@@ -430,8 +430,6 @@ using std::ptrdiff_t;
 // on CUDA devices
 #include "src/Core/arch/CUDA/Complex.h"
 
-#include "src/Core/util/IndexedViewHelper.h"
-#include "src/Core/ArithmeticSequence.h"
 #include "src/Core/IO.h"
 #include "src/Core/DenseCoeffsBase.h"
 #include "src/Core/DenseBase.h"
@@ -473,7 +471,6 @@ using std::ptrdiff_t;
 #include "src/Core/Ref.h"
 #include "src/Core/Block.h"
 #include "src/Core/VectorBlock.h"
-#include "src/Core/IndexedView.h"
 #include "src/Core/Transpose.h"
 #include "src/Core/DiagonalMatrix.h"
 #include "src/Core/Diagonal.h"

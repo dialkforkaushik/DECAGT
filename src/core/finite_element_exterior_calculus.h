@@ -158,8 +158,14 @@ class FiniteElementExteriorCalculus: public GeometryComplex {
     double bb_error_H_curl(int n,
 						   int q_order = 4);
 
+    double bb_error_H_curl_global(int n,
+							   	  int q_order = 4);
+
     double bb_error_H_div(int n,
 						  int q_order = 4);
+
+    double bb_error_H_div_global(int n,
+						  		 int q_order = 4);
 
     double bb_error_stiffness_H_curl(int n,
 								     int q_order = 4);
