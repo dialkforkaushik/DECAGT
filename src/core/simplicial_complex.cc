@@ -105,7 +105,7 @@ int SimplicialComplex::compute_boundary_matrices() {
 						x = 1;
 				}
 				else {
-					if(combinations[k][0] == complex_highdim[j][0] && combinations[k][1] == complex_highdim[j][1])
+					if(combinations[k][0] != complex_highdim[j][0])
 						x = 1;
 					else
 						x = -1;
