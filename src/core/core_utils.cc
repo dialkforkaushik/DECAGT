@@ -617,11 +617,12 @@ int is_rotated(VectorI v1,
     for (int i = 0 ; i < n ; ++i) 
         str_cat = str_cat + "-" + std::to_string(v1[i]); 
 
-    str_cat = str_cat + str_cat;
+    str_cat = str_cat + str_cat + "-";
   
     std::string curr_str = ""; 
     for (int j = 0 ; j < n - 1 ; ++j) 
         curr_str = curr_str + "-" + std::to_string(v2[j]);
+    curr_str = curr_str + "-";
 
     if (str_cat.find(curr_str) == std::string::npos) {
         return FAILURE; 
