@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 2.8)
+find_package(PythonInterp 3.0 REQUIRED)
 
 project(decagt)
 
