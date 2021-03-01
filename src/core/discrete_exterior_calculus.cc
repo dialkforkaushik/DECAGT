@@ -51,7 +51,8 @@ int DiscreteExteriorCalculus::compute_hodge_star_k(int &k) {
 
     for (int j = 0; j < num_simplices[k]; j++) {
         if (std::isnan(hodge_stars[k].coeffRef(j, j)))
-            hodge_stars[k].coeffRef(j, j) = dual_volume[k][j] / primal_volume[k][j];
+            hodge_stars[k].coeffRef(j, j) = dual_volume[k][j] /
+        primal_volume[k][j];
     }
 
     return SUCCESS;
@@ -69,6 +70,7 @@ DiscreteExteriorCalculus::DiscreteExteriorCalculus() : GeometryComplex() {
 DiscreteExteriorCalculus::DiscreteExteriorCalculus(SimplicialComplex sc) : GeometryComplex(sc) {
 
     set_hodge_stars_to_null();
+    compute_hodge_stars();
 }
 
 
