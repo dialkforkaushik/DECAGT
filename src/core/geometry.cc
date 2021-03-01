@@ -329,11 +329,14 @@ GeometryComplex::GeometryComplex() {
 	get_highest_dim_circumcenters();
 }
 
-GeometryComplex::GeometryComplex(SimplicialComplex sc) : SimplicialComplex(sc.vertices,
-																		   sc.simplex) {
+GeometryComplex::GeometryComplex(SimplicialComplex sc) :
+	SimplicialComplex(sc.vertices, sc.simplex) {
+
 	build_complex();
 	set_volumes_to_nil();
 	get_highest_dim_circumcenters();
+    compute_primal_volumes();
+    compute_dual_volumes();
 }
 
 GeometryComplex::~GeometryComplex() {
