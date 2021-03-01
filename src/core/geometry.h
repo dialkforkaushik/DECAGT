@@ -19,7 +19,7 @@ public:
 
 public:
 
-	int compute_primal_volumes();
+  int compute_primal_volumes();
 
   int compute_dual_volumes();
 
