@@ -1,2 +1,0 @@
-tests/meshes/testMesh4/vertices.txt
-tests/meshes/testMesh4/tets.txt
