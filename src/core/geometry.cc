@@ -143,7 +143,7 @@ int GeometryComplex::compute_primal_volumes() {
 
 	primal_volume.push_back(VectorD());
 	for (int i = 0; i < num_simplices[0]; ++i) {
-		primal_volume[0].push_back(1.0);
+		primal_volume[0][i] = 1.0;
 	}
 
 	for (int i = 1; i < N; ++i) {
@@ -170,7 +170,7 @@ int GeometryComplex::compute_primal_volumes() {
 			#ifdef MULTICORE
 				#pragma omp critical
 			#endif
-			primal_volume[i].push_back(vol);
+			primal_volume[i][j] = vol;
 		}
 	}
 
